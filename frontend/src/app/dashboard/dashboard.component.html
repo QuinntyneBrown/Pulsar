@@ -16,7 +16,8 @@
 }
 
 @if (store.toast(); as t) {
-  <div class="toast" [class.toast--ok]="t.kind === 'ok'" [class.toast--err]="t.kind === 'error'">
+  <div class="toast" data-testid="toast" [attr.data-kind]="t.kind"
+       [class.toast--ok]="t.kind === 'ok'" [class.toast--err]="t.kind === 'error'">
     <span class="dot" [class.dot--ok]="t.kind === 'ok'" [class.dot--off]="t.kind === 'error'"></span>
     {{ t.text }}
   </div>

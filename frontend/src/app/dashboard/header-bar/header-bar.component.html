@@ -1,4 +1,4 @@
-<header class="bar">
+<header class="bar" data-testid="header-bar">
   <div class="brand">
     <div class="brand__mark"><span class="ring"></span><span class="core"></span></div>
     <div>
@@ -9,25 +9,25 @@
 
   <div class="status">
     @if (store.plugin().isLoaded) {
-      <div class="chip"><span class="badge bg-Command">PLUGIN</span>{{ store.plugin().plugin?.name }}
+      <div class="chip" data-testid="plugin-status"><span class="badge bg-Command">PLUGIN</span>{{ store.plugin().plugin?.name }}
         <span class="faint">· {{ store.plugin().plugin?.messageCount }} msgs</span></div>
     } @else {
-      <div class="chip"><span class="dot dot--off"></span> No plugin</div>
+      <div class="chip" data-testid="plugin-status"><span class="dot dot--off"></span> No plugin</div>
     }
 
     @if (store.connection().isConnected) {
-      <div class="chip"><span class="dot dot--ok"></span> Redis <span class="mono faint">{{ store.connection().endpoint }}</span></div>
+      <div class="chip" data-testid="redis-status"><span class="dot dot--ok"></span> Redis <span class="mono faint">{{ store.connection().endpoint }}</span></div>
     } @else {
-      <div class="chip" [title]="store.connection().error || ''"><span class="dot dot--off"></span> Redis offline</div>
+      <div class="chip" data-testid="redis-status" [title]="store.connection().error || ''"><span class="dot dot--off"></span> Redis offline</div>
     }
 
-    <div class="chip" title="Live activity feed connection">
-      <span class="dot" [class.dot--ok]="store.liveConnected()" [class.dot--pulse]="store.liveConnected()"
+    <div class="chip" data-testid="live-status" title="Live activity feed connection">
+      <span class="dot" data-testid="live-dot" [class.dot--ok]="store.liveConnected()" [class.dot--pulse]="store.liveConnected()"
             [class.dot--off]="!store.liveConnected()"></span> Live
     </div>
 
     @if (store.runningCount() > 0) {
-      <div class="chip"><span class="dot dot--ok dot--pulse"></span> {{ store.runningCount() }} cyclic</div>
+      <div class="chip" data-testid="cyclic-status"><span class="dot dot--ok dot--pulse"></span> {{ store.runningCount() }} cyclic</div>
     }
 
     <button class="btn" (click)="open.emit()">⚙ Settings</button>

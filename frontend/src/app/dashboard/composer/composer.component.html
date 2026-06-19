@@ -1,8 +1,8 @@
-<section class="panel composer">
+<section class="panel composer" data-testid="composer">
   <div class="panel__head">
     <div class="panel__title">✏️ Compose &amp; Publish</div>
     @if (store.selectedDetail(); as d) {
-      <span class="badge bg-{{ d.category }}">{{ d.category }}</span>
+      <span class="badge bg-{{ d.category }}" data-testid="composer-category">{{ d.category }}</span>
     }
   </div>
 
@@ -10,14 +10,15 @@
     @if (store.selectedDetail(); as d) {
       <div class="head">
         <div>
-          <h2 class="title">{{ d.displayName }}</h2>
-          <div class="faint mono">{{ d.messageType }}</div>
+          <h2 class="title" data-testid="composer-title">{{ d.displayName }}</h2>
+          <div class="faint mono" data-testid="composer-type">{{ d.messageType }}</div>
         </div>
       </div>
 
       <div class="field">
         <label class="field__label">Redis channel</label>
-        <input class="input input--mono" [value]="channel()" (input)="channel.set($any($event.target).value)"
+        <input class="input input--mono" data-testid="composer-channel"
+               [value]="channel()" (input)="channel.set($any($event.target).value)"
                [placeholder]="d.defaultChannel" />
       </div>
 
@@ -25,37 +26,37 @@
         <div class="json-bar">
           <label class="field__label">Payload (JSON)</label>
           <div class="json-actions">
-            <button class="btn btn--ghost btn--sm" (click)="format()">Format</button>
-            <button class="btn btn--ghost btn--sm" (click)="reset()">Reset template</button>
+            <button class="btn btn--ghost btn--sm" data-testid="composer-format" (click)="format()">Format</button>
+            <button class="btn btn--ghost btn--sm" data-testid="composer-reset" (click)="reset()">Reset template</button>
           </div>
         </div>
-        <textarea class="textarea" rows="14" spellcheck="false"
+        <textarea class="textarea" rows="14" spellcheck="false" data-testid="composer-payload"
                   [value]="json()" (input)="json.set($any($event.target).value)"></textarea>
-        @if (jsonError()) { <div class="err">⚠ {{ jsonError() }}</div> }
+        @if (jsonError()) { <div class="err" data-testid="composer-json-error">⚠ {{ jsonError() }}</div> }
         <div class="faint hint">The plugin's serializer turns this payload into the bytes published to Redis.</div>
       </div>
 
       <div class="actions">
-        <button class="btn btn--primary" (click)="send()">▷ Send once</button>
+        <button class="btn btn--primary" data-testid="composer-send" (click)="send()">▷ Send once</button>
 
         <div class="cyclic">
           <span class="faint">every</span>
-          <input class="input interval mono" type="number" min="10" step="10"
+          <input class="input interval mono" type="number" min="10" step="10" data-testid="composer-interval"
                  [value]="intervalMs()" (input)="intervalMs.set(+$any($event.target).value)" />
           <span class="faint">ms</span>
           @for (p of presets; track p.ms) {
-            <button class="btn btn--ghost btn--sm" [class.preset--on]="intervalMs() === p.ms"
-                    (click)="intervalMs.set(p.ms)">{{ p.label }}</button>
+            <button class="btn btn--ghost btn--sm" data-testid="composer-preset" [attr.data-ms]="p.ms"
+                    [class.preset--on]="intervalMs() === p.ms" (click)="intervalMs.set(p.ms)">{{ p.label }}</button>
           }
-          <button class="btn" (click)="startCyclic()">⟳ Start cyclic</button>
+          <button class="btn" data-testid="composer-start-cyclic" (click)="startCyclic()">⟳ Start cyclic</button>
         </div>
       </div>
     } @else if (!store.plugin().isLoaded) {
-      <div class="empty"><div class="empty__icon">🔌</div><div>Load a plugin to begin.</div></div>
+      <div class="empty" data-testid="composer-empty-noplugin"><div class="empty__icon">🔌</div><div>Load a plugin to begin.</div></div>
     } @else if (store.loadingDetail()) {
-      <div class="empty"><div>Loading…</div></div>
+      <div class="empty" data-testid="composer-loading"><div>Loading…</div></div>
     } @else {
-      <div class="empty"><div class="empty__icon">👈</div><div>Select a message from the catalog.</div></div>
+      <div class="empty" data-testid="composer-empty-noselection"><div class="empty__icon">👈</div><div>Select a message from the catalog.</div></div>
     }
   </div>
 </section>

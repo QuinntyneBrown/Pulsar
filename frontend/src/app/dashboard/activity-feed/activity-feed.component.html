@@ -1,25 +1,25 @@
-<section class="panel feed">
+<section class="panel feed" data-testid="activity-feed">
   <div class="panel__head">
     <div class="panel__title">📡 Live Activity</div>
     @if (store.activityLog().length > 0) {
-      <button class="btn btn--ghost btn--sm" (click)="store.clearActivity()">Clear</button>
+      <button class="btn btn--ghost btn--sm" data-testid="activity-clear" (click)="store.clearActivity()">Clear</button>
     }
   </div>
   <div class="panel__body">
     @if (store.activityLog().length === 0) {
-      <div class="empty"><div class="faint">Published messages will stream here.</div></div>
+      <div class="empty" data-testid="activity-empty"><div class="faint">Published messages will stream here.</div></div>
     } @else {
       @for (a of store.activityLog(); track a._id) {
-        <div class="row" [class.row--fail]="!a.success">
+        <div class="row" data-testid="activity-row" [class.row--fail]="!a.success">
           <span class="row__time mono faint">{{ a.timestamp | date:'HH:mm:ss.SSS' }}</span>
           <span class="dot" [class.dot--ok]="a.success" [class.dot--off]="!a.success"></span>
-          <span class="row__src" [class.cyclic]="a.source === 'cyclic'">{{ a.source }}</span>
-          <span class="row__name">{{ a.displayName }}</span>
-          <span class="row__chan mono faint">{{ a.channel }}</span>
+          <span class="row__src" data-testid="activity-source" [class.cyclic]="a.source === 'cyclic'">{{ a.source }}</span>
+          <span class="row__name" data-testid="activity-name">{{ a.displayName }}</span>
+          <span class="row__chan mono faint" data-testid="activity-channel">{{ a.channel }}</span>
           @if (a.success) {
-            <span class="row__bytes faint">{{ a.byteCount }}B</span>
+            <span class="row__bytes faint" data-testid="activity-bytes">{{ a.byteCount }}B</span>
           } @else {
-            <span class="row__err" [title]="a.error || ''">{{ a.error }}</span>
+            <span class="row__err" data-testid="activity-error" [title]="a.error || ''">{{ a.error }}</span>
           }
         </div>
       }

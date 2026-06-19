@@ -1,8 +1,8 @@
-<div class="backdrop" (click)="close.emit()">
-  <div class="dialog panel" (click)="$event.stopPropagation()">
+<div class="backdrop" data-testid="settings-backdrop" (click)="close.emit()">
+  <div class="dialog panel" data-testid="settings-dialog" (click)="$event.stopPropagation()">
     <div class="panel__head">
       <div class="panel__title">⚙ Settings</div>
-      <button class="btn btn--ghost btn--sm" (click)="close.emit()">✕</button>
+      <button class="btn btn--ghost btn--sm" data-testid="settings-close" (click)="close.emit()">✕</button>
     </div>
 
     <div class="panel__body">
@@ -11,12 +11,12 @@
         <h3 class="section__title">Redis connection</h3>
         <p class="faint">Where cyclic messages, events, and faults are published.</p>
         <div class="row">
-          <input class="input input--mono" [value]="connectionString()"
+          <input class="input input--mono" data-testid="connection-input" [value]="connectionString()"
                  (input)="connectionString.set($any($event.target).value)"
                  placeholder="localhost:6379" />
-          <button class="btn btn--primary" (click)="connect()" [disabled]="!connectionString().trim()">Connect</button>
+          <button class="btn btn--primary" data-testid="connection-connect" (click)="connect()" [disabled]="!connectionString().trim()">Connect</button>
         </div>
-        <div class="status">
+        <div class="status" data-testid="connection-status">
           @if (store.connection().isConnected) {
             <span class="chip"><span class="dot dot--ok"></span> Connected · <span class="mono">{{ store.connection().endpoint }}</span></span>
           } @else {
@@ -31,16 +31,16 @@
         <p class="faint">Path to a .NET assembly that exposes a message catalog and serializer
           (implements <span class="mono">IPulsarPlugin</span>).</p>
         <div class="row">
-          <input class="input input--mono" [value]="pluginPath()"
+          <input class="input input--mono" data-testid="plugin-input" [value]="pluginPath()"
                  (input)="pluginPath.set($any($event.target).value)"
                  placeholder="plugins/MyMessages.dll" />
-          <button class="btn btn--primary" (click)="load()" [disabled]="!pluginPath().trim()">Load</button>
+          <button class="btn btn--primary" data-testid="plugin-load" (click)="load()" [disabled]="!pluginPath().trim()">Load</button>
         </div>
-        <div class="status">
+        <div class="status" data-testid="plugin-settings-status">
           @if (store.plugin().isLoaded) {
             <span class="chip"><span class="dot dot--ok"></span> {{ store.plugin().plugin?.name }}
               <span class="faint">· {{ store.plugin().plugin?.messageCount }} messages</span></span>
-            <button class="btn btn--danger btn--sm" (click)="store.unloadPlugin()">Unload</button>
+            <button class="btn btn--danger btn--sm" data-testid="plugin-unload" (click)="store.unloadPlugin()">Unload</button>
           } @else {
             <span class="chip"><span class="dot dot--off"></span> No plugin loaded</span>
           }
