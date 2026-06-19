@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Subsystem Fault",
+  "type": "object",
+  "properties": {
+    "subsystem": { "type": "string", "minLength": 1, "default": "power" },
+    "faultCode": { "type": "string", "minLength": 1, "default": "F-205" },
+    "description": { "type": "string", "default": "Voltage out of expected range." },
+    "severity": { "type": "string", "enum": ["Info", "Warning", "Critical"], "default": "Critical" }
+  },
+  "required": ["subsystem", "faultCode", "severity"]
+}

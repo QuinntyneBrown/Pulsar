@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Operator Alert",
+  "type": "object",
+  "properties": {
+    "code": { "type": "string", "minLength": 1, "default": "INFO-100" },
+    "message": { "type": "string", "default": "Routine status update." },
+    "severity": { "type": "string", "enum": ["Info", "Warning", "Critical"], "default": "Info" }
+  },
+  "required": ["code", "severity"]
+}

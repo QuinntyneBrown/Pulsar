@@ -8,17 +8,25 @@ faults onto Redis Pub/Sub channels — so you can exercise a downstream
 that normally feeds it.
 
 The key idea: **Pulsar does not know your message types or wire format.** You point
-it at a compiled .NET library that declares which messages exist and how to
-serialize them. Pulsar handles everything else — scheduling, editing, publishing,
-and a live activity feed.
+it at a **plugin** that declares which messages exist and how their edited JSON turns
+into the bytes on the wire. The simplest plugin is **data only** — a
+`pulsar.plugin.json` manifest plus a JSON Schema per message — and needs no compiled
+code at all. Pulsar handles everything else: scheduling, editing, validation,
+publishing, and a live activity feed.
 
 ```
-            ┌──────────── Pulsar ────────────┐
- your DLL   │  catalog + serializer (plugin) │      Redis Pub/Sub        your system
- (messages) ├────────────────────────────────┤   ───────────────────►   under test
-            │  scheduler · editor · feed · UI │   channel: telemetry.*   (event hub →
-            └────────────────────────────────┘                           dashboard → plugins)
+                 ┌──────────────── Pulsar ─────────────────┐
+ manifest +      │  catalog (data) + JsonToRedisValue       │   Redis Pub/Sub      your system
+ JSON Schemas    ├──────────────────────────────────────────┤  ─────────────────►  under test
+ (+ optional     │  scheduler · editor · validation · feed  │  channel: telemetry.* (event hub →
+  adapter code)  └──────────────────────────────────────────┘                       dashboard → plugins)
 ```
+
+A message library supplies the **JSON Schema** for each message; Pulsar creates JSON
+from it, then a tiny **`JsonToRedisValue`** adapter converts that JSON into the Redis
+message. Built-in adapters (`json-passthrough`, `json-envelope`) cover the common
+cases with no code; the typed `IPulsarPlugin` model is still supported for binary
+wire formats (see [Writing your own message plugin](#writing-your-own-message-plugin)).
 
 ---
 
@@ -68,11 +76,12 @@ Pick a message, edit the JSON payload, then **Send once** or **Start cyclic**.
 - **Settings** (gear) — change the Redis connection string or load a different plugin.
 
 Configure the Redis connection and the auto-loaded plugin in
-`backend/src/Pulsar.Api/appsettings.json`:
+`backend/src/Pulsar.Api/appsettings.json`. `PluginPath` may point at a **manifest**
+(`*.json`, data-only) or a **plugin assembly** (`*.dll`, legacy):
 
 ```json
 "Pulsar": {
-  "PluginPath": "plugins/Pulsar.SampleMessages.dll",
+  "PluginPath": "plugins/manifest/pulsar.plugin.json",
   "RedisConnectionString": "localhost:6379"
 }
 ```
@@ -81,48 +90,84 @@ Configure the Redis connection and the auto-loaded plugin in
 
 ## Writing your own message plugin
 
-A plugin is an ordinary .NET class library that references **only**
-`Pulsar.Contracts` and implements `IPulsarPlugin`. Pulsar discovers it by
-reflection when you load the DLL — there is nothing to register.
+There are two ways to write a plugin. Prefer the first.
+
+### 1. Data-only manifest (recommended — no code)
+
+A plugin can be just data: a `pulsar.plugin.json` manifest, one JSON Schema per
+message, an example payload per message, and a named adapter. There is **no assembly
+to build or load**, which also sidesteps Windows Smart App Control blocking
+freshly-built unsigned plugin DLLs.
+
+```jsonc
+// pulsar.plugin.json — the catalog as data
+{
+  "name": "My Messages",
+  "adapter": "json-envelope",          // built-in; or "json-passthrough", or a custom ref (below)
+  "messages": [
+    {
+      "key": "MyTelemetry",
+      "displayName": "My Telemetry",
+      "category": "Telemetry",
+      "defaultChannel": "telemetry.mine",
+      "schema": "schemas/my-telemetry.schema.json",
+      "example": "examples/my-telemetry.json"   // optional; falls back to the schema's examples/default
+    }
+  ]
+}
+```
+
+```jsonc
+// schemas/my-telemetry.schema.json — the message shape (drives the editor + advisory validation)
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "My Telemetry",
+  "type": "object",
+  "properties": {
+    "deviceId": { "type": "string", "minLength": 1, "default": "device-001" },
+    "status":   { "type": "string", "enum": ["Nominal", "Degraded", "Down"], "default": "Nominal" }
+  },
+  "required": ["deviceId", "status"]
+}
+```
+
+**Built-in adapters** (the `adapter` field):
+
+| Name | What it publishes |
+| --- | --- |
+| `json-passthrough` | The edited JSON, verbatim (UTF-8). |
+| `json-envelope` | `{ messageType, correlationId, emittedAtUnixMs, payload }` wrapping the edited JSON. |
+
+The schema is used for **advisory validation only** — a payload that doesn't match is
+flagged in the composer, but you can always send it anyway (Pulsar is a fault-injection
+tool, so sending malformed messages on purpose is a feature).
+
+A complete, working example lives in
+[`backend/samples/Pulsar.SampleMessages/manifest`](backend/samples/Pulsar.SampleMessages/manifest) —
+copy it as your starting point.
+
+### 2. Custom adapter (for non-JSON wire formats)
+
+When the wire format is binary (protobuf, Avro, a bespoke framing), supply a
+`public static` method matching `JsonToRedisValue` and reference it from the manifest
+as `relative/path.dll!Namespace.Type.Method`:
 
 ```csharp
 using Pulsar.Contracts;
 
-public sealed class MyPlugin : IPulsarPlugin
+public static class MyWire
 {
-    public string Name => "My Messages";
-
-    public IMessageCatalog Catalog { get; } = new MessageCatalog(new[]
-    {
-        new MessageDescriptor(
-            key:            "MyTelemetry",
-            displayName:    "My Telemetry",
-            category:       MessageCategory.Telemetry,
-            messageType:    typeof(MyTelemetry),
-            defaultChannel: "telemetry.mine",
-            createTemplate: () => new MyTelemetry { /* realistic defaults */ }),
-    });
-
-    // The serializer OWNS the wire format. Pulsar just calls it.
-    public IMessageSerializer Serializer { get; } = new MySerializer();
+    // byte[] (string editedJson, MessageContext context)
+    public static byte[] ToRedis(string editedJson, MessageContext context)
+        => MyBinaryFormat.Encode(editedJson, context.Key); // parse the JSON, emit any bytes you like
 }
 ```
 
-The serializer turns a payload object into the exact bytes placed on Redis. This is
-where you reproduce whatever envelope/encoding your system under test expects:
-
-```csharp
-public sealed class MySerializer : IMessageSerializer
-{
-    public byte[] Serialize(object message, MessageDescriptor descriptor)
-    {
-        // wrap, add a type discriminator, stamp a timestamp, encode — your call.
-        return MyWireFormat.Encode(message, descriptor.Key);
-    }
-}
+```jsonc
+{ "name": "My Messages", "adapter": "MyWire.dll!MyNamespace.MyWire.ToRedis", "messages": [ /* … */ ] }
 ```
 
-**Reference it from your `.csproj` without shipping a duplicate of the contracts:**
+Reference `Pulsar.Contracts` without shipping a duplicate:
 
 ```xml
 <ProjectReference Include="path/to/Pulsar.Contracts.csproj">
@@ -131,12 +176,17 @@ public sealed class MySerializer : IMessageSerializer
 </ProjectReference>
 ```
 
-Build it, then load it via the **Settings** dialog (paste the path to the DLL) or by
-setting `Pulsar:PluginPath`. Loading a new plugin stops any running cyclic jobs and
-swaps the catalog and serializer atomically.
+### 3. Legacy `IPulsarPlugin` (still supported)
 
-A complete, working example lives in [`backend/samples/Pulsar.SampleMessages`](backend/samples/Pulsar.SampleMessages) —
-copy it as your starting point.
+The original typed model — a class library implementing `IPulsarPlugin` with a
+`MessageDescriptor` catalog and an `IMessageSerializer` — still loads unchanged when
+`PluginPath` points at the DLL. Internally it is adapted to the same pipeline (the
+serializer becomes a `JsonToRedisValue`). The compiled reference plugin lives in
+[`backend/samples/Pulsar.SampleMessages`](backend/samples/Pulsar.SampleMessages).
+
+Load any of these via the **Settings** dialog (paste the path) or by setting
+`Pulsar:PluginPath`. Loading a new plugin stops any running cyclic jobs and swaps the
+catalog atomically.
 
 ---
 
@@ -148,22 +198,27 @@ Radically simple, SOLID, and message-agnostic. The repo splits into a self-conta
 
 | Project | Responsibility |
 | --- | --- |
-| **backend/src/Pulsar.Contracts** | The plugin SDK: `IPulsarPlugin`, `IMessageCatalog`, `IMessageSerializer`, `MessageDescriptor`. The only thing a plugin references. |
-| **backend/src/Pulsar.Core** | Domain logic — plugin loading (isolated `AssemblyLoadContext`), JSON template ↔ instance bridging, one-shot publishing, the cyclic scheduler, and the transport/activity abstractions. No web, no Redis client. |
+| **backend/src/Pulsar.Contracts** | The plugin SDK: `JsonToRedisValue` + `MessageContext` (the adapter contract), plus the legacy `IPulsarPlugin`/`IMessageSerializer`/`MessageDescriptor`. The only thing a plugin references. |
+| **backend/src/Pulsar.Core** | Domain logic — manifest + legacy plugin loading (`CatalogLoader`), built-in adapters, advisory JSON-Schema validation, the editor template, one-shot publishing, the cyclic scheduler, and the transport/activity abstractions. No web, no Redis client. |
 | **backend/src/Pulsar.Redis** | The single place a Redis client appears: `IMessageTransport` over `StackExchange.Redis`. |
 | **backend/src/Pulsar.Api** | ASP.NET Core 8 host — minimal-API endpoints, the SSE activity stream, and SPA hosting. |
-| **backend/samples/Pulsar.SampleMessages** | A reference plugin (telemetry/event/fault messages + a JSON-envelope serializer). |
-| **frontend** | Angular 17.2.2 standalone app: a signal-based store, an SSE live feed, and a three-pane dashboard. |
+| **backend/samples/Pulsar.SampleMessages** | The reference plugin in both forms: a data-only `manifest/` (schemas + examples + `json-envelope`) and the legacy compiled `IPulsarPlugin`. |
+| **frontend** | Angular 17.2.2 standalone app: a signal-based store, an SSE live feed, and a three-pane dashboard with advisory schema validation. |
 | **backend/tests/Pulsar.Tests** | xUnit unit + in-memory HTTP integration tests. |
 
 Design choices worth knowing:
 
-- **The tool never compile-time references message types.** Plugins load into a
-  collectible `AssemblyLoadContext`; `Pulsar.Contracts` resolves from the default
-  context so interface identity holds across the boundary.
-- **Pulsar only edits the *payload*.** It reflects a template to JSON, lets you edit
-  it, rehydrates the concrete type, and hands it to the plugin's serializer — which
-  alone decides the bytes on the wire.
+- **The catalog is data, not code.** A manifest + JSON Schemas describe the messages;
+  the editor is seeded from an example and the message is published by a named adapter.
+  No assembly is loaded for the data-only path — which also avoids Smart App Control
+  blocking freshly-built plugin DLLs.
+- **One seam, `JsonToRedisValue`.** The edited JSON goes straight to an adapter that
+  returns the bytes — a strict generalization of the old serializer (the legacy
+  `IMessageSerializer` is adapted to exactly this). Built-in adapters cover plain and
+  enveloped JSON; a custom static method covers binary formats. Only a custom code
+  adapter or a legacy DLL loads a collectible `AssemblyLoadContext`.
+- **Validation is advisory.** A JSON-Schema mismatch is surfaced in the UI but never
+  blocks publishing — sending malformed payloads on purpose is part of the job.
 - **Dependency inversion** keeps `Pulsar.Core` free of both ASP.NET and Redis: it
   depends on `IMessageTransport` and `IActivityNotifier`, implemented by the host.
 - **Server-Sent Events** (not a websocket library) power the live feed — the feed is
@@ -175,6 +230,7 @@ Design choices worth knowing:
 | --- | --- |
 | `GET /api/plugin` · `POST /api/plugin/load` · `POST /api/plugin/unload` | Plugin state / load / unload |
 | `GET /api/messages` · `GET /api/messages/{key}` | Catalog list / detail (with editable template) |
+| `POST /api/messages/{key}/validate` | Advisory schema check (never blocks publishing) |
 | `POST /api/publish` | Publish one message now |
 | `GET /api/cyclic` · `POST /api/cyclic` · `POST /api/cyclic/{id}/stop` · `DELETE /api/cyclic/{id}` | Cyclic jobs |
 | `GET /api/connection` · `POST /api/connection` | Redis connection status / (re)connect |

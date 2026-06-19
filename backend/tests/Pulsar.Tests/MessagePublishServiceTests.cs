@@ -15,7 +15,7 @@ public class MessagePublishServiceTests
         var transport = new FakeMessageTransport();
         var notifier = new RecordingNotifier();
         var templates = new MessageTemplateService();
-        var service = new MessagePublishService(host, transport, templates, notifier);
+        var service = new MessagePublishService(host, transport, notifier);
         var template = templates.CreateTemplateJson(host.Current!.FindMessage("HeartbeatTelemetry")!);
         return (service, transport, notifier, template, templates, host);
     }
@@ -61,7 +61,7 @@ public class MessagePublishServiceTests
     public async Task No_plugin_loaded_throws()
     {
         var service = new MessagePublishService(
-            new PluginHost(new PluginLoader()), new FakeMessageTransport(), new MessageTemplateService(), new RecordingNotifier());
+            new PluginHost(TestSupport.CatalogLoader()), new FakeMessageTransport(), new RecordingNotifier());
 
         await Assert.ThrowsAsync<NoPluginLoadedException>(() =>
             service.PublishAsync("HeartbeatTelemetry", null, "{}"));

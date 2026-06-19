@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Battery Status",
+  "type": "object",
+  "properties": {
+    "packId": { "type": "string", "minLength": 1, "default": "pack-a" },
+    "percentage": { "type": "number", "minimum": 0, "maximum": 100, "default": 87.5 },
+    "voltage": { "type": "number", "minimum": 0, "default": 28.4 },
+    "charging": { "type": "boolean", "default": false }
+  },
+  "required": ["packId", "percentage"]
+}

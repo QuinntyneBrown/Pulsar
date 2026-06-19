@@ -1,0 +1,6 @@
+{
+  "subsystem": "power",
+  "faultCode": "F-205",
+  "description": "Voltage out of expected range.",
+  "severity": "Critical"
+}

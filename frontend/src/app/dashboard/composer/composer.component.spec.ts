@@ -5,7 +5,7 @@ import { ComposerComponent } from './composer.component';
 
 const DETAIL: MessageDetail = {
   key: 'k', displayName: 'My Message', category: 'Event', defaultChannel: 'events.k',
-  messageType: 'My.Type', templateJson: '{"a":1}',
+  messageType: 'My.Type', templateJson: '{"a":1}', hasSchema: false,
 };
 
 describe('ComposerComponent', () => {
@@ -92,5 +92,54 @@ describe('ComposerComponent', () => {
     component.reset();
     expect(component.channel()).toBe('events.k');
     expect(component.json()).toBe('{"a":1}');
+  });
+
+  it('shows an advisory schema warning when the store reports issues', () => {
+    selectDetail();
+    store.schemaIssues.set(['$.status: bad value']);
+    fixture.detectChanges();
+    const warn = fixture.nativeElement.querySelector('[data-testid="composer-schema-warning"]');
+    expect(warn).toBeTruthy();
+    expect(warn.textContent).toContain('$.status: bad value');
+  });
+
+  it('shows no schema warning when there are no issues', () => {
+    selectDetail();
+    store.schemaIssues.set([]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="composer-schema-warning"]')).toBeFalsy();
+  });
+
+  it('still sends when schema issues are present (advisory only)', () => {
+    selectDetail();
+    store.schemaIssues.set(['something is off']);
+    component.json.set('{"x":true}');
+    component.send();
+    expect(store.publishOnce).toHaveBeenCalledWith('k', 'events.k', '{"x":true}');
+  });
+
+  it('debounces an advisory re-validation after editing a schema-backed message', () => {
+    jest.useFakeTimers();
+    try {
+      selectDetail({ ...DETAIL, hasSchema: true });
+      component.onJson('{"a":2}');
+      expect(store.validatePayload).not.toHaveBeenCalled(); // debounced
+      jest.advanceTimersByTime(250);
+      expect(store.validatePayload).toHaveBeenCalledWith('k', '{"a":2}');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not validate a message that has no schema', () => {
+    jest.useFakeTimers();
+    try {
+      selectDetail(); // DETAIL.hasSchema === false
+      component.onJson('{"a":2}');
+      jest.advanceTimersByTime(250);
+      expect(store.validatePayload).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

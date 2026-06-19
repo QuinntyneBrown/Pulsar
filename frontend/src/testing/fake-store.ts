@@ -18,6 +18,7 @@ export interface FakeStore {
   selectedKey: WritableSignal<string | null>;
   selectedDetail: WritableSignal<MessageDetail | null>;
   loadingDetail: WritableSignal<boolean>;
+  schemaIssues: WritableSignal<string[]>;
   connection: WritableSignal<TransportStatus>;
   jobs: WritableSignal<CyclicJob[]>;
   activityLog: WritableSignal<PublishActivity[]>;
@@ -39,6 +40,8 @@ export interface FakeStore {
   removeJob: jest.Mock<void, [string]>;
   setConnection: jest.Mock<void, [string]>;
   clearActivity: jest.Mock;
+  validatePayload: jest.Mock<void, [string, string]>;
+  clearSchemaIssues: jest.Mock;
 }
 
 export function createFakeStore(): FakeStore {
@@ -48,6 +51,7 @@ export function createFakeStore(): FakeStore {
     selectedKey: signal<string | null>(null),
     selectedDetail: signal<MessageDetail | null>(null),
     loadingDetail: signal(false),
+    schemaIssues: signal<string[]>([]),
     connection: signal<TransportStatus>({ isConnected: false, endpoint: null, error: null }),
     jobs: signal<CyclicJob[]>([]),
     activityLog: signal<PublishActivity[]>([]),
@@ -69,6 +73,8 @@ export function createFakeStore(): FakeStore {
     removeJob: jest.fn(),
     setConnection: jest.fn(),
     clearActivity: jest.fn(),
+    validatePayload: jest.fn(),
+    clearSchemaIssues: jest.fn(),
   };
 }
 

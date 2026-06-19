@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mode Changed",
+  "type": "object",
+  "properties": {
+    "from": { "type": "string", "default": "Idle" },
+    "to": { "type": "string", "default": "Active" },
+    "reason": { "type": "string", "default": "Operator command" }
+  },
+  "required": ["from", "to"]
+}

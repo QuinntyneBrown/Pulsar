@@ -140,6 +140,23 @@ The transport contract (`IMessageTransport.PublishAsync(channel, byte[])`) is **
 - A detailed, sequenced plan lives in
   [`docs/plans/0001-json-message-model-implementation-plan.md`](../../plans/0001-json-message-model-implementation-plan.md).
 
+## Update — as built (2026-06-19)
+
+Implemented per the [plan](../../plans/0001-json-message-model-implementation-plan.md). Two
+choices differ from the notes above and are worth recording:
+
+- **Validator is in-house, not a third-party package.** Rather than take a dependency on
+  `JsonSchema.Net`, `Pulsar.Core` ships a small advisory `SchemaValidator` covering the keywords the
+  tool uses (type/required/properties/items/enum/const/numeric bounds/lengths). This keeps Core
+  dependency-light and needs no package restore; advisory validation does not require a complete
+  draft-2020-12 engine. The "Negative/new dependency" consequence above therefore does **not** apply.
+- **Envelope parity is structural, not byte-for-byte.** Literal byte equality is impossible (the
+  envelope stamps a random `correlationId` and a wall-clock timestamp); the regression guard asserts
+  envelope structure and payload equivalence instead.
+
+Outcome: backend 42 tests and frontend 87 tests green; the data-only sample auto-loads with no DLL
+and publishes a valid envelope to Redis. The legacy `IPulsarPlugin` path still loads unchanged.
+
 ## References
 
 - Trade-study: [`docs/json-standardized-message-model.md`](../../json-standardized-message-model.md)

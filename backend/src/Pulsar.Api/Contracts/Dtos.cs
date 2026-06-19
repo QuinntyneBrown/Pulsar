@@ -1,4 +1,4 @@
-using Pulsar.Contracts;
+using Pulsar.Core.Messages;
 using Pulsar.Core.Plugins;
 
 namespace Pulsar.Api.Contracts;
@@ -13,20 +13,22 @@ public sealed record StartCyclicRequest(string Key, string? Channel, int Interva
 
 public sealed record SetConnectionRequest(string ConnectionString);
 
+public sealed record ValidateMessageRequest(string PayloadJson);
+
 // ---- Responses -------------------------------------------------------------
 
 public sealed record PluginStateDto(bool IsLoaded, PluginInfoDto? Plugin);
 
 public sealed record PluginInfoDto(string Name, string SourcePath, DateTimeOffset LoadedAt, int MessageCount)
 {
-    public static PluginInfoDto From(LoadedPlugin p) =>
-        new(p.Name, p.SourcePath, p.LoadedAt, p.Messages.Count);
+    public static PluginInfoDto From(LoadedCatalog c) =>
+        new(c.Name, c.SourcePath, c.LoadedAt, c.Messages.Count);
 }
 
 public sealed record MessageDto(string Key, string DisplayName, string Category, string DefaultChannel)
 {
-    public static MessageDto From(MessageDescriptor d) =>
-        new(d.Key, d.DisplayName, d.Category.ToString(), d.DefaultChannel);
+    public static MessageDto From(CatalogEntry e) =>
+        new(e.Key, e.DisplayName, e.Category.ToString(), e.DefaultChannel);
 }
 
 public sealed record MessageDetailDto(
@@ -35,8 +37,16 @@ public sealed record MessageDetailDto(
     string Category,
     string DefaultChannel,
     string MessageType,
-    string TemplateJson)
+    string TemplateJson,
+    bool HasSchema)
 {
-    public static MessageDetailDto From(MessageDescriptor d, string templateJson) =>
-        new(d.Key, d.DisplayName, d.Category.ToString(), d.DefaultChannel, d.MessageType.Name, templateJson);
+    public static MessageDetailDto From(CatalogEntry e, string templateJson) =>
+        new(e.Key, e.DisplayName, e.Category.ToString(), e.DefaultChannel,
+            e.TypeHint ?? e.Key, templateJson, e.Schema is not null);
+}
+
+/// <summary>Advisory schema-check result returned to the composer; never blocks publishing.</summary>
+public sealed record ValidationResultDto(bool Matches, IReadOnlyList<string> Messages)
+{
+    public static ValidationResultDto From(ValidationResult r) => new(r.Matches, r.Messages);
 }

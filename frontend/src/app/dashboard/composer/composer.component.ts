@@ -9,6 +9,9 @@ const PRESETS = [
   { label: '30 s', ms: 30000 },
 ];
 
+/** Debounce before asking the server to re-check the payload against its schema. */
+const VALIDATE_DEBOUNCE_MS = 200;
+
 @Component({
   selector: 'app-composer',
   standalone: true,
@@ -24,6 +27,8 @@ export class ComposerComponent {
   readonly intervalMs = signal(1000);
   readonly jsonError = signal<string | null>(null);
 
+  private validationTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     // Re-seed the editor whenever a different message is selected.
     effect(() => {
@@ -33,7 +38,14 @@ export class ComposerComponent {
       this.json.set(detail.templateJson);
       this.intervalMs.set(1000);
       this.jsonError.set(null);
+      this.store.clearSchemaIssues();
     }, { allowSignalWrites: true });
+  }
+
+  /** Editor input: keep the payload and (debounced) refresh the advisory schema check. */
+  onJson(value: string): void {
+    this.json.set(value);
+    this.scheduleValidation();
   }
 
   reset(): void {
@@ -42,6 +54,7 @@ export class ComposerComponent {
     this.channel.set(d.defaultChannel);
     this.json.set(d.templateJson);
     this.jsonError.set(null);
+    this.store.clearSchemaIssues();
   }
 
   format(): void {
@@ -51,6 +64,7 @@ export class ComposerComponent {
 
   send(): void {
     const d = this.store.selectedDetail();
+    // Schema mismatches are advisory — only invalid JSON blocks a send.
     if (!d || !this.validate()) return;
     this.store.publishOnce(d.key, this.channelOrNull(), this.json());
   }
@@ -60,6 +74,24 @@ export class ComposerComponent {
     if (!d || !this.validate()) return;
     if (this.intervalMs() < 10) { this.jsonError.set('Interval must be at least 10 ms.'); return; }
     this.store.startCyclic(d.key, this.channelOrNull(), this.intervalMs(), this.json());
+  }
+
+  private scheduleValidation(): void {
+    if (this.validationTimer) clearTimeout(this.validationTimer);
+    this.validationTimer = setTimeout(() => this.revalidate(), VALIDATE_DEBOUNCE_MS);
+  }
+
+  /** Ask the server to check the current payload, unless there's no schema or the JSON is unparseable. */
+  revalidate(): void {
+    const d = this.store.selectedDetail();
+    if (!d || !d.hasSchema) { this.store.clearSchemaIssues(); return; }
+    try {
+      JSON.parse(this.json());
+    } catch {
+      this.store.clearSchemaIssues(); // invalid JSON is already shown via jsonError
+      return;
+    }
+    this.store.validatePayload(d.key, this.json());
   }
 
   private channelOrNull(): string | null {

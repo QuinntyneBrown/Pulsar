@@ -1,0 +1,57 @@
+{
+  // A data-only Pulsar plugin: no compiled assembly. The JSON Schemas describe each
+  // message, the examples seed the editor, and the built-in "json-envelope" adapter
+  // wraps the payload exactly like the reference SampleJsonSerializer did.
+  "name": "Sample Messages",
+  "adapter": "json-envelope",
+  "messages": [
+    {
+      "key": "HeartbeatTelemetry",
+      "displayName": "Heartbeat",
+      "category": "Telemetry",
+      "defaultChannel": "telemetry.heartbeat",
+      "schema": "schemas/heartbeat.schema.json",
+      "example": "examples/heartbeat.json"
+    },
+    {
+      "key": "TemperatureReading",
+      "displayName": "Temperature Reading",
+      "category": "Telemetry",
+      "defaultChannel": "telemetry.temperature",
+      "schema": "schemas/temperature.schema.json",
+      "example": "examples/temperature.json"
+    },
+    {
+      "key": "BatteryTelemetry",
+      "displayName": "Battery Status",
+      "category": "Telemetry",
+      "defaultChannel": "telemetry.battery",
+      "schema": "schemas/battery.schema.json",
+      "example": "examples/battery.json"
+    },
+    {
+      "key": "OperatorAlert",
+      "displayName": "Operator Alert",
+      "category": "Event",
+      "defaultChannel": "events.alert",
+      "schema": "schemas/operator-alert.schema.json",
+      "example": "examples/operator-alert.json"
+    },
+    {
+      "key": "ModeChangedEvent",
+      "displayName": "Mode Changed",
+      "category": "Event",
+      "defaultChannel": "events.mode-changed",
+      "schema": "schemas/mode-changed.schema.json",
+      "example": "examples/mode-changed.json"
+    },
+    {
+      "key": "SubsystemFault",
+      "displayName": "Subsystem Fault",
+      "category": "Fault",
+      "defaultChannel": "faults.subsystem",
+      "schema": "schemas/subsystem-fault.schema.json",
+      "example": "examples/subsystem-fault.json"
+    }
+  ]
+}

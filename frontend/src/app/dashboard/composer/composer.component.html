@@ -31,9 +31,17 @@
           </div>
         </div>
         <textarea class="textarea" rows="14" spellcheck="false" data-testid="composer-payload"
-                  [value]="json()" (input)="json.set($any($event.target).value)"></textarea>
+                  [value]="json()" (input)="onJson($any($event.target).value)"></textarea>
         @if (jsonError()) { <div class="err" data-testid="composer-json-error">⚠ {{ jsonError() }}</div> }
-        <div class="faint hint">The plugin's serializer turns this payload into the bytes published to Redis.</div>
+        @if (store.schemaIssues().length > 0) {
+          <div class="warn" data-testid="composer-schema-warning">
+            <div class="warn__head">⚠ Payload doesn't match the schema — you can still send it.</div>
+            <ul class="warn__list">
+              @for (issue of store.schemaIssues(); track issue) { <li>{{ issue }}</li> }
+            </ul>
+          </div>
+        }
+        <div class="faint hint">The plugin's adapter turns this payload into the bytes published to Redis.</div>
       </div>
 
       <div class="actions">

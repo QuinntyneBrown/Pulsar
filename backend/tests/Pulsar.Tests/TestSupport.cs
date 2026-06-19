@@ -8,13 +8,29 @@ namespace Pulsar.Tests;
 
 internal static class TestSupport
 {
-    /// <summary>Path to the built sample plugin assembly.</summary>
+    /// <summary>Path to the built (legacy <c>IPulsarPlugin</c>) sample plugin assembly.</summary>
     public static string SamplePluginPath => typeof(SamplePlugin).Assembly.Location;
 
-    public static PluginHost LoadedHost()
+    /// <summary>
+    /// Path to the data-only sample manifest, copied next to the sample assembly in
+    /// the test output (see Pulsar.Tests.csproj).
+    /// </summary>
+    public static string SampleManifestPath =>
+        Path.Combine(Path.GetDirectoryName(SamplePluginPath)!, "manifest", "pulsar.plugin.json");
+
+    public static CatalogLoader CatalogLoader() =>
+        new(new LegacyPluginLoader(), new ManifestPluginLoader());
+
+    /// <summary>A host with the data-only manifest plugin loaded (the primary path).</summary>
+    public static PluginHost LoadedHost() => HostLoadedFrom(SampleManifestPath);
+
+    /// <summary>A host with the legacy compiled plugin loaded (the back-compat path).</summary>
+    public static PluginHost LegacyLoadedHost() => HostLoadedFrom(SamplePluginPath);
+
+    private static PluginHost HostLoadedFrom(string path)
     {
-        var host = new PluginHost(new PluginLoader());
-        host.Load(SamplePluginPath);
+        var host = new PluginHost(CatalogLoader());
+        host.Load(path);
         return host;
     }
 

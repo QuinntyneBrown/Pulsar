@@ -53,11 +53,21 @@ describe('ApiService', () => {
   });
 
   it('getMessage URL-encodes the key', () => {
-    const detail = { key: 'a/b', displayName: 'A', category: 'Event', defaultChannel: 'c', messageType: 't', templateJson: '{}' } as MessageDetail;
+    const detail = { key: 'a/b', displayName: 'A', category: 'Event', defaultChannel: 'c', messageType: 't', templateJson: '{}', hasSchema: false } as MessageDetail;
     service.getMessage('a/b').subscribe();
     const req = http.expectOne('/api/messages/a%2Fb');
     expect(req.request.method).toBe('GET');
     req.flush(detail);
+  });
+
+  it('validateMessage POSTs the payload to /api/messages/:key/validate', () => {
+    let actual: { matches: boolean; messages: string[] } | undefined;
+    service.validateMessage('a/b', '{"x":1}').subscribe(v => (actual = v));
+    const req = http.expectOne('/api/messages/a%2Fb/validate');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ payloadJson: '{"x":1}' });
+    req.flush({ matches: false, messages: ['$.x: bad'] });
+    expect(actual).toEqual({ matches: false, messages: ['$.x: bad'] });
   });
 
   it('publish POSTs the request body to /api/publish', () => {

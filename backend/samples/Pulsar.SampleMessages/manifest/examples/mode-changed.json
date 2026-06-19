@@ -1,0 +1,5 @@
+{
+  "from": "Idle",
+  "to": "Active",
+  "reason": "Operator command"
+}

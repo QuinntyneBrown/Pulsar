@@ -19,4 +19,12 @@
     <ProjectReference Include="..\..\samples\Pulsar.SampleMessages\Pulsar.SampleMessages.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Copy the data-only sample manifest into the test output (preserving its tree)
+         so tests can load it deterministically next to the sample assembly. -->
+    <None Include="..\..\samples\Pulsar.SampleMessages\manifest\**\*.*"
+          Link="manifest\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

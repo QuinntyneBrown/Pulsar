@@ -1,0 +1,5 @@
+{
+  "sensorId": "sensor-temp-1",
+  "celsius": 21.5,
+  "recentSamples": [21.3, 21.4, 21.5]
+}

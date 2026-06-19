@@ -2,10 +2,30 @@
 
 > **Implements:** [ADR-0001](../adr/integration/0001-json-standardized-message-model.md)
 > **Trade-study:** [`docs/json-standardized-message-model.md`](../json-standardized-message-model.md)
-> **Status:** ready to start
+> **Status:** ✅ implemented 2026-06-19 — backend 42 tests green, frontend 87 tests green,
+> data-only sample verified end-to-end (auto-loads with no DLL; envelope publish → Redis HTTP 200).
 > **Guiding principle:** ship as a *generalization* of the current pipeline. Nothing regresses;
 > the existing `IPulsarPlugin` path keeps working until the new path is proven, then becomes a
 > thin compatibility shim.
+
+> ### Decisions locked (Phase 0) & deviations from the original plan
+> - **0.1 adapter return type:** `byte[]`-returning delegate `JsonToRedisValue` in `Pulsar.Contracts`
+>   (no Redis dependency); the transport already takes `byte[]`.
+> - **0.2 message context:** yes — `JsonToRedisValue(string editedJson, MessageContext ctx)` with
+>   `MessageContext(Key, Channel, Category)`.
+> - **0.3 code-adapter reference:** `relative/or/abs/path.dll!Namespace.Type.Method` (public static),
+>   resolved relative to the manifest, bound via `Delegate.CreateDelegate`.
+> - **0.4 validator — DEVIATION:** shipped a **built-in, dependency-free advisory validator**
+>   (`SchemaValidator`, a focused subset of draft 2020-12: type/required/properties/items/enum/const/
+>   numeric bounds/lengths) **instead of `JsonSchema.Net`** — avoids a network package restore and
+>   keeps `Pulsar.Core` dependency-light. Validation is advisory, so a full implementation isn't needed.
+> - **0.5 example precedence:** manifest `example` file → schema `examples[0]` → schema object `default`
+>   → skeleton from property defaults/types → `{}`.
+> - **0.6 schema refs:** plain file path or `file.json#/json/pointer` (both implemented).
+> - **Phase 3.1 envelope parity — DEVIATION:** the plan's "byte-for-byte" guard is impossible (the
+>   envelope stamps a random `correlationId` and a wall-clock `emittedAtUnixMs`). Replaced with a
+>   **structural** parity test: same envelope keys, `messageType == key`, and payload fields/values
+>   round-trip. This is also the more correct test.
 
 ## Goal
 

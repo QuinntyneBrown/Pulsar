@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   CyclicJob, MessageDetail, MessageSummary, PluginInfo, PluginState,
-  PublishRequest, PublishResult, StartCyclicRequest, TransportStatus,
+  PublishRequest, PublishResult, StartCyclicRequest, TransportStatus, ValidationResult,
 } from './models';
 
 /** Thin, typed wrapper over the Pulsar HTTP API. */
@@ -30,6 +30,12 @@ export class ApiService {
 
   getMessage(key: string): Observable<MessageDetail> {
     return this.http.get<MessageDetail>(`${this.base}/messages/${encodeURIComponent(key)}`);
+  }
+
+  /** Advisory schema check; returns matches=false with messages rather than erroring. */
+  validateMessage(key: string, payloadJson: string): Observable<ValidationResult> {
+    return this.http.post<ValidationResult>(
+      `${this.base}/messages/${encodeURIComponent(key)}/validate`, { payloadJson });
   }
 
   publish(request: PublishRequest): Observable<PublishResult> {

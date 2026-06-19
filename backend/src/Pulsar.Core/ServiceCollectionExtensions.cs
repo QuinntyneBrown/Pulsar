@@ -18,7 +18,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddPulsarCore(this IServiceCollection services)
     {
         services.TryAddSingleton(TimeProvider.System);
-        services.TryAddSingleton<PluginLoader>();
+        services.TryAddSingleton<LegacyPluginLoader>();
+        services.TryAddSingleton<ManifestPluginLoader>();
+        services.TryAddSingleton<CatalogLoader>();
         services.TryAddSingleton<PluginHost>();
         services.TryAddSingleton<IPluginHost>(sp => sp.GetRequiredService<PluginHost>());
         services.TryAddSingleton<MessageTemplateService>();

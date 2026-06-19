@@ -1,4 +1,3 @@
-using Pulsar.Core;
 using Pulsar.Core.Messages;
 using Pulsar.Core.Plugins;
 using Xunit;
@@ -7,46 +6,57 @@ namespace Pulsar.Tests;
 
 public class MessageTemplateServiceTests
 {
-    private static MessageDescriptorAccess Setup()
+    private static (PluginHost Host, MessageTemplateService Templates) Setup()
     {
         var host = TestSupport.LoadedHost();
-        return new MessageDescriptorAccess(host, new MessageTemplateService());
+        return (host, new MessageTemplateService());
     }
 
-    private sealed record MessageDescriptorAccess(PluginHost Host, MessageTemplateService Templates);
-
     [Fact]
-    public void Creates_template_json_from_descriptor_defaults()
+    public void Creates_template_json_from_manifest_example()
     {
         var (host, templates) = Setup();
-        var descriptor = host.Current!.FindMessage("HeartbeatTelemetry")!;
+        var entry = host.Current!.FindMessage("HeartbeatTelemetry")!;
 
-        var json = templates.CreateTemplateJson(descriptor);
+        var json = templates.CreateTemplateJson(entry);
 
         Assert.Contains("deviceId", json);
         Assert.Contains("device-001", json);
     }
 
     [Fact]
-    public void Rehydrates_edited_json_back_to_message_instance()
+    public void Validate_passes_for_the_unedited_template()
     {
         var (host, templates) = Setup();
-        var descriptor = host.Current!.FindMessage("HeartbeatTelemetry")!;
-        var edited = templates.CreateTemplateJson(descriptor).Replace("device-001", "device-XYZ");
+        var entry = host.Current!.FindMessage("HeartbeatTelemetry")!;
 
-        var instance = templates.Rehydrate(edited, descriptor);
+        var result = templates.Validate(entry, templates.CreateTemplateJson(entry));
 
-        Assert.Equal(descriptor.MessageType, instance.GetType());
-        Assert.Equal("device-XYZ", instance.GetType().GetProperty("DeviceId")!.GetValue(instance));
+        Assert.True(result.Matches);
+        Assert.Empty(result.Messages);
     }
 
     [Fact]
-    public void Invalid_json_throws_MessageEditException()
+    public void Validate_reports_mismatch_for_an_out_of_enum_value()
     {
         var (host, templates) = Setup();
-        var descriptor = host.Current!.FindMessage("HeartbeatTelemetry")!;
+        var entry = host.Current!.FindMessage("HeartbeatTelemetry")!;
+        var edited = templates.CreateTemplateJson(entry).Replace("\"Nominal\"", "\"Exploding\"");
 
-        Assert.Throws<MessageEditException>(() => templates.Rehydrate("{ not valid", descriptor));
-        Assert.Throws<MessageEditException>(() => templates.Rehydrate("", descriptor));
+        var result = templates.Validate(entry, edited);
+
+        Assert.False(result.Matches);
+        Assert.NotEmpty(result.Messages);
+    }
+
+    [Fact]
+    public void Validate_is_advisory_and_never_throws_on_garbage()
+    {
+        var (host, templates) = Setup();
+        var entry = host.Current!.FindMessage("HeartbeatTelemetry")!;
+
+        var result = templates.Validate(entry, "{ not valid json");
+
+        Assert.False(result.Matches); // reported, not thrown
     }
 }

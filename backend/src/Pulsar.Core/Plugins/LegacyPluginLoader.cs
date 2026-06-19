@@ -1,26 +1,28 @@
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pulsar.Contracts;
+using Pulsar.Core.Messages;
+using Pulsar.Core.Publishing;
 
 namespace Pulsar.Core.Plugins;
 
 /// <summary>
-/// Loads a plugin assembly from disk into an isolated context and locates its
-/// single <see cref="IPulsarPlugin"/> implementation.
+/// Back-compat loader for the original model: loads a .NET assembly implementing
+/// <see cref="IPulsarPlugin"/> and adapts it to a <see cref="LoadedCatalog"/>. Each
+/// legacy message becomes a <see cref="CatalogEntry"/> whose adapter is exactly the
+/// old pipeline tail — <c>JSON → rehydrate to the CLR type → IMessageSerializer.Serialize</c> —
+/// proving the new <see cref="JsonToRedisValue"/> model is a strict generalization.
 /// </summary>
-public sealed class PluginLoader
+public sealed class LegacyPluginLoader
 {
-    private readonly TimeProvider _clock;
-    private readonly ILogger<PluginLoader> _logger;
+    private readonly ILogger<LegacyPluginLoader> _logger;
 
-    public PluginLoader(TimeProvider? clock = null, ILogger<PluginLoader>? logger = null)
-    {
-        _clock = clock ?? TimeProvider.System;
-        _logger = logger ?? NullLogger<PluginLoader>.Instance;
-    }
+    public LegacyPluginLoader(ILogger<LegacyPluginLoader>? logger = null)
+        => _logger = logger ?? NullLogger<LegacyPluginLoader>.Instance;
 
-    public LoadedPlugin Load(string assemblyPath)
+    public LoadedCatalog Load(string assemblyPath, DateTimeOffset loadedAt)
     {
         if (string.IsNullOrWhiteSpace(assemblyPath))
             throw new PluginLoadException("A plugin assembly path is required.");
@@ -58,10 +60,12 @@ public sealed class PluginLoader
 
             ValidatePlugin(plugin);
 
-            _logger.LogInformation("Loaded plugin '{Name}' from {Path} with {Count} message(s).",
-                plugin.Name, fullPath, plugin.Catalog.Messages.Count);
+            var entries = plugin.Catalog.Messages.Select(d => ToEntry(d, plugin.Serializer)).ToList();
 
-            return new LoadedPlugin(plugin, context, fullPath, _clock.GetUtcNow());
+            _logger.LogInformation("Loaded legacy plugin '{Name}' from {Path} with {Count} message(s).",
+                plugin.Name, fullPath, entries.Count);
+
+            return new LoadedCatalog(plugin.Name, fullPath, entries, loadedAt, new LoadContextHandle(context));
         }
         catch (Exception ex)
         {
@@ -69,6 +73,59 @@ public sealed class PluginLoader
             if (ex is PluginLoadException) throw;
             throw new PluginLoadException($"Failed to load plugin from '{fullPath}': {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// Adapts one legacy <see cref="MessageDescriptor"/> into a <see cref="CatalogEntry"/>:
+    /// the template is the reflected POCO serialized to JSON, and the adapter
+    /// rehydrates that JSON into the CLR type before handing it to the plugin's
+    /// serializer.
+    /// </summary>
+    internal static CatalogEntry ToEntry(MessageDescriptor descriptor, IMessageSerializer serializer)
+    {
+        JsonToRedisValue adapter = (json, _) =>
+        {
+            object instance;
+            try
+            {
+                instance = JsonSerializer.Deserialize(json, descriptor.MessageType, MessageTemplateService.JsonOptions)
+                    ?? throw new MessageEditException("Payload JSON deserialized to null.");
+            }
+            catch (JsonException ex)
+            {
+                throw new MessageEditException(
+                    $"Payload JSON is not valid for '{descriptor.DisplayName}': {ex.Message}", ex);
+            }
+
+            return serializer.Serialize(instance, descriptor);
+        };
+
+        return new CatalogEntry(
+            key: descriptor.Key,
+            displayName: descriptor.DisplayName,
+            category: descriptor.Category,
+            defaultChannel: descriptor.DefaultChannel,
+            createTemplateJson: () => ReflectTemplateJson(descriptor),
+            adapter: adapter,
+            schema: null,
+            typeHint: descriptor.MessageType.Name);
+    }
+
+    private static string ReflectTemplateJson(MessageDescriptor descriptor)
+    {
+        object instance;
+        try
+        {
+            instance = descriptor.CreateTemplate()
+                ?? throw new MessageEditException($"The template factory for '{descriptor.Key}' returned null.");
+        }
+        catch (MessageEditException) { throw; }
+        catch (Exception ex)
+        {
+            throw new MessageEditException($"The template factory for '{descriptor.Key}' threw: {ex.Message}", ex);
+        }
+
+        return JsonSerializer.Serialize(instance, instance.GetType(), MessageTemplateService.JsonOptions);
     }
 
     private static Type FindPluginType(Assembly assembly, string path)

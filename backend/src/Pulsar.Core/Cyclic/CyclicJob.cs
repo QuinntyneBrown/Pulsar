@@ -1,23 +1,24 @@
 using Microsoft.Extensions.Logging;
 using Pulsar.Contracts;
 using Pulsar.Core.Activity;
+using Pulsar.Core.Plugins;
 using Pulsar.Core.Publishing;
 using Pulsar.Core.Transport;
 
 namespace Pulsar.Core.Cyclic;
 
 /// <summary>
-/// One running cyclic publisher: it serializes and publishes its message on a
-/// fixed cadence until stopped. The payload is serialized afresh every tick, so
-/// serializers that stamp a timestamp/sequence produce a distinct message each
-/// time. A failing tick is recorded but does not stop the loop — handy for
-/// watching recovery when the transport comes back.
+/// One running cyclic publisher: it runs its message's adapter over the edited JSON
+/// and publishes on a fixed cadence until stopped. The adapter is invoked afresh
+/// every tick, so adapters that stamp a timestamp/correlation id (e.g. the envelope)
+/// produce a distinct message each time. A failing tick is recorded but does not stop
+/// the loop — handy for watching recovery when the transport comes back.
 /// </summary>
 internal sealed class CyclicJob
 {
-    private readonly MessageDescriptor _descriptor;
-    private readonly object _payload;
-    private readonly IMessageSerializer _serializer;
+    private readonly CatalogEntry _entry;
+    private readonly string _payloadJson;
+    private readonly MessageContext _context;
     private readonly IMessageTransport _transport;
     private readonly IActivityNotifier _notifier;
     private readonly TimeProvider _clock;
@@ -33,11 +34,10 @@ internal sealed class CyclicJob
 
     public CyclicJob(
         Guid id,
-        MessageDescriptor descriptor,
+        CatalogEntry entry,
         string channel,
         int intervalMs,
-        object payload,
-        IMessageSerializer serializer,
+        string payloadJson,
         IMessageTransport transport,
         IActivityNotifier notifier,
         TimeProvider clock,
@@ -47,9 +47,9 @@ internal sealed class CyclicJob
         Channel = channel;
         IntervalMs = intervalMs;
         StartedAt = clock.GetUtcNow();
-        _descriptor = descriptor;
-        _payload = payload;
-        _serializer = serializer;
+        _entry = entry;
+        _payloadJson = payloadJson;
+        _context = new MessageContext(entry.Key, channel, entry.Category);
         _transport = transport;
         _notifier = notifier;
         _clock = clock;
@@ -83,8 +83,8 @@ internal sealed class CyclicJob
         var lastTicks = Interlocked.Read(ref _lastPublishedAtTicks);
         return new CyclicJobInfo(
             Id,
-            _descriptor.Key,
-            _descriptor.DisplayName,
+            _entry.Key,
+            _entry.DisplayName,
             Channel,
             IntervalMs,
             // Derive State from the same field as StoppedAt so a snapshot can never
@@ -122,7 +122,7 @@ internal sealed class CyclicJob
         var timestamp = _clock.GetUtcNow();
         try
         {
-            var bytes = MessagePublishService.Serialize(_serializer, _payload, _descriptor);
+            var bytes = MessagePublishService.Invoke(_entry, _payloadJson, _context);
             await _transport.PublishAsync(Channel, bytes, ct).ConfigureAwait(false);
             Interlocked.Increment(ref _published);
             Interlocked.Exchange(ref _lastPublishedAtTicks, timestamp.UtcTicks);
@@ -142,5 +142,5 @@ internal sealed class CyclicJob
     }
 
     private PublishActivity Activity(int bytes, bool ok, string? error, DateTimeOffset ts) =>
-        new("cyclic", _descriptor.Key, _descriptor.DisplayName, Channel, bytes, ok, error, ts, Id);
+        new("cyclic", _entry.Key, _entry.DisplayName, Channel, bytes, ok, error, ts, Id);
 }

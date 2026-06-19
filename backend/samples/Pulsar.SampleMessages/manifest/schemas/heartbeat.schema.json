@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Heartbeat",
+  "type": "object",
+  "properties": {
+    "deviceId": { "type": "string", "minLength": 1, "default": "device-001" },
+    "sequenceNumber": { "type": "integer", "minimum": 0, "default": 0 },
+    "status": { "type": "string", "enum": ["Nominal", "Degraded", "Down"], "default": "Nominal" },
+    "uptimeSeconds": { "type": "number", "minimum": 0, "default": 3600 }
+  },
+  "required": ["deviceId", "status"]
+}

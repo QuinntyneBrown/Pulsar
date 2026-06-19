@@ -17,10 +17,25 @@
     <PropertyGroup>
       <SamplePluginDll>$(MSBuildProjectDirectory)\..\..\samples\Pulsar.SampleMessages\bin\$(Configuration)\net8.0\Pulsar.SampleMessages.dll</SamplePluginDll>
     </PropertyGroup>
+    <!-- Legacy compiled sample: kept so the IPulsarPlugin back-compat path stays exercised. -->
     <Copy SourceFiles="$(SamplePluginDll)" DestinationFolder="$(MSBuildProjectDirectory)\plugins"
           SkipUnchangedFiles="true" Condition="Exists('$(SamplePluginDll)')" />
     <Copy SourceFiles="$(SamplePluginDll)" DestinationFolder="$(OutDir)plugins"
           SkipUnchangedFiles="true" Condition="Exists('$(SamplePluginDll)')" />
+  </Target>
+
+  <ItemGroup>
+    <!-- The data-only sample plugin: manifest + JSON Schemas + examples, no assembly. -->
+    <SampleManifestFiles Include="..\..\samples\Pulsar.SampleMessages\manifest\**\*.*" />
+  </ItemGroup>
+
+  <Target Name="CopySampleManifest" AfterTargets="Build">
+    <Copy SourceFiles="@(SampleManifestFiles)"
+          DestinationFiles="@(SampleManifestFiles->'$(MSBuildProjectDirectory)\plugins\manifest\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SampleManifestFiles)"
+          DestinationFiles="@(SampleManifestFiles->'$(OutDir)plugins\manifest\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

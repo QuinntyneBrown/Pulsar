@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pulsar.Core.Activity;
-using Pulsar.Core.Messages;
 using Pulsar.Core.Plugins;
 using Pulsar.Core.Transport;
 
@@ -13,9 +12,9 @@ public sealed record StartCyclicJobRequest(string MessageKey, string? Channel, i
 
 /// <summary>
 /// Owns the set of running cyclic jobs. Starting validates against the loaded
-/// plugin and rehydrates the payload once; the resulting job then ticks on its
-/// own cadence. Stopped jobs are kept (with their counters) until removed, so
-/// the UI can show what ran.
+/// catalog and captures the edited JSON; the resulting job then runs the message's
+/// adapter on its own cadence. Stopped jobs are kept (with their counters) until
+/// removed, so the UI can show what ran.
 /// </summary>
 public sealed class CyclicJobManager : IAsyncDisposable
 {
@@ -27,7 +26,6 @@ public sealed class CyclicJobManager : IAsyncDisposable
     private bool _stopping;
     private readonly IPluginHost _host;
     private readonly IMessageTransport _transport;
-    private readonly MessageTemplateService _templates;
     private readonly IActivityNotifier _notifier;
     private readonly TimeProvider _clock;
     private readonly ILoggerFactory _loggerFactory;
@@ -35,14 +33,12 @@ public sealed class CyclicJobManager : IAsyncDisposable
     public CyclicJobManager(
         IPluginHost host,
         IMessageTransport transport,
-        MessageTemplateService templates,
         IActivityNotifier notifier,
         TimeProvider? clock = null,
         ILoggerFactory? loggerFactory = null)
     {
         _host = host;
         _transport = transport;
-        _templates = templates;
         _notifier = notifier;
         _clock = clock ?? TimeProvider.System;
         _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
@@ -55,19 +51,18 @@ public sealed class CyclicJobManager : IAsyncDisposable
             throw new ArgumentOutOfRangeException(nameof(request),
                 $"Interval must be between {MinIntervalMs} ms and {MaxIntervalMs} ms.");
 
-        var plugin = _host.Current ?? throw new NoPluginLoadedException();
-        var descriptor = plugin.FindMessage(request.MessageKey) ?? throw new MessageNotFoundException(request.MessageKey);
-        var channel = Publishing.MessagePublishService.ResolveChannel(descriptor, request.Channel);
-        var payload = _templates.Rehydrate(request.PayloadJson, descriptor);
+        var catalog = _host.Current ?? throw new NoPluginLoadedException();
+        var entry = catalog.FindMessage(request.MessageKey) ?? throw new MessageNotFoundException(request.MessageKey);
+        var channel = Publishing.MessagePublishService.ResolveChannel(entry, request.Channel);
 
         var job = new CyclicJob(
-            Guid.NewGuid(), descriptor, channel, request.IntervalMs, payload,
-            plugin.Serializer, _transport, _notifier, _clock,
+            Guid.NewGuid(), entry, channel, request.IntervalMs, request.PayloadJson,
+            _transport, _notifier, _clock,
             _loggerFactory.CreateLogger<CyclicJob>());
 
         // Register and start under the gate so a concurrent ClearAllAsync (plugin
         // reload) can never drop this job without stopping it — which would leave
-        // it ticking against an unloaded plugin's serializer.
+        // it ticking against an adapter from an unloaded plugin's context.
         lock (_gate)
         {
             if (_stopping)

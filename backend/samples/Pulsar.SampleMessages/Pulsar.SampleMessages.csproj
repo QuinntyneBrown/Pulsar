@@ -13,4 +13,10 @@
     </ProjectReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The data-only equivalent of this plugin. Copied to output (preserving the
+         manifest/ tree) so tests and the API can load it without a build step. -->
+    <None Include="manifest\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

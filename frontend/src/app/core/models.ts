@@ -10,6 +10,14 @@ export interface MessageSummary {
 export interface MessageDetail extends MessageSummary {
   messageType: string;
   templateJson: string;
+  /** Whether a JSON Schema is attached for advisory validation. */
+  hasSchema: boolean;
+}
+
+/** Advisory result of checking a payload against its schema. Never blocks publishing. */
+export interface ValidationResult {
+  matches: boolean;
+  messages: string[];
 }
 
 export interface PluginInfo {

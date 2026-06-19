@@ -91,9 +91,18 @@ public static class PulsarEndpoints
 
         api.MapGet("/messages/{key}", (string key, IPluginHost host, MessageTemplateService templates) =>
         {
-            var plugin = host.Current ?? throw new NoPluginLoadedException();
-            var descriptor = plugin.FindMessage(key) ?? throw new MessageNotFoundException(key);
-            return Results.Ok(MessageDetailDto.From(descriptor, templates.CreateTemplateJson(descriptor)));
+            var catalog = host.Current ?? throw new NoPluginLoadedException();
+            var entry = catalog.FindMessage(key) ?? throw new MessageNotFoundException(key);
+            return Results.Ok(MessageDetailDto.From(entry, templates.CreateTemplateJson(entry)));
+        });
+
+        // Advisory schema check for the composer. Always 200 with a verdict — it never
+        // blocks publishing, so a payload that doesn't match still returns matches=false.
+        api.MapPost("/messages/{key}/validate", (string key, ValidateMessageRequest req, IPluginHost host, MessageTemplateService templates) =>
+        {
+            var catalog = host.Current ?? throw new NoPluginLoadedException();
+            var entry = catalog.FindMessage(key) ?? throw new MessageNotFoundException(key);
+            return Results.Ok(ValidationResultDto.From(templates.Validate(entry, req.PayloadJson)));
         });
     }
 

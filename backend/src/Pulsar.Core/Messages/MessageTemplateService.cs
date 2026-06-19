@@ -1,20 +1,22 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Pulsar.Contracts;
+using Pulsar.Core.Plugins;
 
 namespace Pulsar.Core.Messages;
 
 /// <summary>
-/// Bridges between editable JSON in the UI and concrete message instances. This
-/// is the <em>only</em> place Pulsar touches the shape of a message, and it does
-/// so generically via reflection — it never needs to know the type at compile
-/// time.
+/// Helpers for the editor side of a message: the JSON the editor opens with and the
+/// advisory schema check shown beside it. In the JSON-standardized model Pulsar no
+/// longer rehydrates a CLR type — the edited JSON goes straight to the adapter — so
+/// this service is thin: it surfaces a catalog entry's example and validates against
+/// its schema (when one was supplied).
 /// </summary>
 public sealed class MessageTemplateService
 {
     /// <summary>
-    /// JSON settings used for the editor view. Web defaults give camelCase +
-    /// case-insensitive matching; enums are written as readable strings.
+    /// JSON settings for the editor view: camelCase + case-insensitive matching,
+    /// indented, enums as readable strings. Shared by the loaders that prettify
+    /// examples and by the legacy shim that reflects a POCO to JSON.
     /// </summary>
     public static JsonSerializerOptions JsonOptions { get; } = new(JsonSerializerDefaults.Web)
     {
@@ -22,40 +24,21 @@ public sealed class MessageTemplateService
         Converters = { new JsonStringEnumConverter() },
     };
 
-    /// <summary>Serializes a fresh template instance for a descriptor to indented JSON.</summary>
-    public string CreateTemplateJson(MessageDescriptor descriptor)
+    /// <summary>The JSON the editor opens with for a message.</summary>
+    public string CreateTemplateJson(CatalogEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(descriptor);
-        object instance;
-        try
-        {
-            instance = descriptor.CreateTemplate()
-                ?? throw new MessageEditException($"The template factory for '{descriptor.Key}' returned null.");
-        }
-        catch (MessageEditException) { throw; }
-        catch (Exception ex)
-        {
-            throw new MessageEditException($"The template factory for '{descriptor.Key}' threw: {ex.Message}", ex);
-        }
-
-        return JsonSerializer.Serialize(instance, instance.GetType(), JsonOptions);
+        ArgumentNullException.ThrowIfNull(entry);
+        return entry.CreateTemplateJson();
     }
 
-    /// <summary>Turns edited JSON back into an instance of the descriptor's message type.</summary>
-    public object Rehydrate(string json, MessageDescriptor descriptor)
+    /// <summary>
+    /// Validates a payload against the entry's schema. Returns
+    /// <see cref="ValidationResult.Ok"/> when the entry has no schema — validation is
+    /// advisory and absence of a schema simply means "nothing to check".
+    /// </summary>
+    public ValidationResult Validate(CatalogEntry entry, string payloadJson)
     {
-        ArgumentNullException.ThrowIfNull(descriptor);
-        if (string.IsNullOrWhiteSpace(json))
-            throw new MessageEditException("Payload JSON must not be empty.");
-
-        try
-        {
-            return JsonSerializer.Deserialize(json, descriptor.MessageType, JsonOptions)
-                ?? throw new MessageEditException("Payload JSON deserialized to null.");
-        }
-        catch (JsonException ex)
-        {
-            throw new MessageEditException($"Payload JSON is not valid for '{descriptor.DisplayName}': {ex.Message}", ex);
-        }
+        ArgumentNullException.ThrowIfNull(entry);
+        return entry.Schema is null ? ValidationResult.Ok : SchemaValidator.Validate(payloadJson, entry.Schema);
     }
 }

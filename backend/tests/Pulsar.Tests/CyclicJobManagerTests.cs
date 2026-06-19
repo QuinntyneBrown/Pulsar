@@ -11,7 +11,7 @@ public class CyclicJobManagerTests
         var host = TestSupport.LoadedHost();
         var transport = new FakeMessageTransport();
         var templates = new MessageTemplateService();
-        var manager = new CyclicJobManager(host, transport, templates, new RecordingNotifier());
+        var manager = new CyclicJobManager(host, transport, new RecordingNotifier());
         var json = templates.CreateTemplateJson(host.Current!.FindMessage("HeartbeatTelemetry")!);
         return (manager, transport, json);
     }

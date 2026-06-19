@@ -15,7 +15,8 @@ public sealed class PulsarAppFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseSetting("Pulsar:PluginPath", TestSupport.SamplePluginPath);
+        // Boot the data-only manifest plugin (the primary path).
+        builder.UseSetting("Pulsar:PluginPath", TestSupport.SampleManifestPath);
         builder.UseSetting("Pulsar:RedisConnectionString", "localhost:6399,connectTimeout=300,abortConnect=false");
     }
 }
@@ -76,6 +77,47 @@ public class ApiIntegrationTests : IClassFixture<PulsarAppFactory>
             new { key = "HeartbeatTelemetry", channel = (string?)null, payloadJson = template });
 
         Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Message_detail_reports_a_schema_is_present()
+    {
+        var doc = await GetJson("/api/messages/HeartbeatTelemetry");
+        Assert.True(doc.RootElement.GetProperty("hasSchema").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Validate_endpoint_passes_for_the_template_and_flags_a_bad_value()
+    {
+        var detail = await GetJson("/api/messages/HeartbeatTelemetry");
+        var template = detail.RootElement.GetProperty("templateJson").GetString();
+
+        var ok = await PostJson("/api/messages/HeartbeatTelemetry/validate", new { payloadJson = template });
+        Assert.True(ok.RootElement.GetProperty("matches").GetBoolean());
+
+        var bad = await PostJson("/api/messages/HeartbeatTelemetry/validate",
+            new { payloadJson = "{\"deviceId\":\"d\",\"status\":\"Exploding\"}" });
+        Assert.False(bad.RootElement.GetProperty("matches").GetBoolean());
+        Assert.True(bad.RootElement.GetProperty("messages").GetArrayLength() > 0);
+    }
+
+    [Fact]
+    public async Task Schema_mismatch_does_not_block_publishing()
+    {
+        // A payload that violates the schema (bad enum) but is valid JSON must still be
+        // published — validation is advisory. Redis is down, so it fails at the transport
+        // (502), proving it was NOT rejected up front as a 400/422.
+        var response = await _client.PostAsJsonAsync("/api/publish",
+            new { key = "HeartbeatTelemetry", channel = (string?)null, payloadJson = "{\"deviceId\":\"d\",\"status\":\"Exploding\"}" });
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+    }
+
+    private async Task<JsonDocument> PostJson(string url, object body)
+    {
+        var response = await _client.PostAsJsonAsync(url, body);
+        response.EnsureSuccessStatusCode();
+        return JsonDocument.Parse(await response.Content.ReadAsStringAsync());
     }
 
     private async Task<JsonDocument> GetJson(string url)

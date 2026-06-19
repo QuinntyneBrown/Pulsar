@@ -29,6 +29,8 @@ export class PulsarStore {
   readonly selectedKey = signal<string | null>(null);
   readonly selectedDetail = signal<MessageDetail | null>(null);
   readonly loadingDetail = signal(false);
+  /** Advisory schema-mismatch messages for the current payload; empty when it matches (or no schema). */
+  readonly schemaIssues = signal<string[]>([]);
   readonly connection = signal<TransportStatus>({ isConnected: false, endpoint: null, error: null });
   readonly jobs = signal<CyclicJob[]>([]);
   readonly activityLog = signal<PublishActivity[]>([]);
@@ -122,6 +124,22 @@ export class PulsarStore {
       error: err => this.error(err),
     });
   }
+
+  // ---- advisory validation ------------------------------------------------
+
+  /**
+   * Checks a payload against its message's schema and records any mismatches. This
+   * is purely advisory — it NEVER prevents publishing; the composer surfaces the
+   * result as a badge and always lets the user send anyway.
+   */
+  validatePayload(key: string, payloadJson: string): void {
+    this.api.validateMessage(key, payloadJson).subscribe({
+      next: result => this.schemaIssues.set(result.matches ? [] : result.messages),
+      error: () => this.schemaIssues.set([]), // advisory: a failed check is silent
+    });
+  }
+
+  clearSchemaIssues(): void { this.schemaIssues.set([]); }
 
   // ---- publishing ---------------------------------------------------------
 

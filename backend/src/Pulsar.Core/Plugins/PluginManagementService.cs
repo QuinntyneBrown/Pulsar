@@ -20,10 +20,10 @@ public sealed class PluginManagementService
         _jobs = jobs;
     }
 
-    public async Task<LoadedPlugin> LoadAsync(string assemblyPath)
+    public async Task<LoadedCatalog> LoadAsync(string path)
     {
         await _jobs.ClearAllAsync().ConfigureAwait(false);
-        return _host.Load(assemblyPath);
+        return _host.Load(path);
     }
 
     public async Task UnloadAsync()

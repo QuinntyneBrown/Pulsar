@@ -3,20 +3,20 @@ namespace Pulsar.Core.Plugins;
 /// <summary>Thread-safe, in-memory implementation of <see cref="IPluginHost"/>.</summary>
 public sealed class PluginHost : IPluginHost, IDisposable
 {
-    private readonly PluginLoader _loader;
+    private readonly CatalogLoader _loader;
     private readonly object _gate = new();
-    private LoadedPlugin? _current;
+    private LoadedCatalog? _current;
 
-    public PluginHost(PluginLoader loader) => _loader = loader;
+    public PluginHost(CatalogLoader loader) => _loader = loader;
 
-    public LoadedPlugin? Current
+    public LoadedCatalog? Current
     {
         get { lock (_gate) return _current; }
     }
 
-    public LoadedPlugin Load(string assemblyPath)
+    public LoadedCatalog Load(string path)
     {
-        var loaded = _loader.Load(assemblyPath);
+        var loaded = _loader.Load(path);
         lock (_gate)
         {
             _current?.Dispose();

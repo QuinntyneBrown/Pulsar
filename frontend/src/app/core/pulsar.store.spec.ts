@@ -12,7 +12,7 @@ type ApiMock = { [K in keyof ApiService]: jest.Mock };
 function createApiMock(): ApiMock {
   return {
     getPlugin: jest.fn(), loadPlugin: jest.fn(), unloadPlugin: jest.fn(),
-    getMessages: jest.fn(), getMessage: jest.fn(), publish: jest.fn(),
+    getMessages: jest.fn(), getMessage: jest.fn(), validateMessage: jest.fn(), publish: jest.fn(),
     getJobs: jest.fn(), startCyclic: jest.fn(), stopJob: jest.fn(),
     removeJob: jest.fn(), getConnection: jest.fn(), setConnection: jest.fn(),
   } as unknown as ApiMock;
@@ -83,7 +83,7 @@ describe('PulsarStore', () => {
     it('refreshPlugin loads messages when a plugin is present', () => {
       api.getPlugin.mockReturnValue(of<PluginState>({ isLoaded: true, plugin: { name: 'P', sourcePath: 'p.dll', loadedAt: 't', messageCount: 1 } }));
       api.getMessages.mockReturnValue(of([msg('a', 'Event')]));
-      api.getMessage.mockReturnValue(of({ ...msg('a', 'Event'), messageType: 'T', templateJson: '{}' } as MessageDetail));
+      api.getMessage.mockReturnValue(of({ ...msg('a', 'Event'), messageType: 'T', templateJson: '{}', hasSchema: false } as MessageDetail));
 
       store.refreshPlugin();
 
@@ -111,7 +111,7 @@ describe('PulsarStore', () => {
     });
 
     it('select fetches the detail and clears the loading flag', () => {
-      const detail = { ...msg('a', 'Event'), messageType: 'T', templateJson: '{}' } as MessageDetail;
+      const detail = { ...msg('a', 'Event'), messageType: 'T', templateJson: '{}', hasSchema: false } as MessageDetail;
       api.getMessage.mockReturnValue(of(detail));
 
       store.select('a');
@@ -122,7 +122,7 @@ describe('PulsarStore', () => {
     });
 
     it('select is a no-op when the same key is already loaded', () => {
-      const detail = { ...msg('a', 'Event'), messageType: 'T', templateJson: '{}' } as MessageDetail;
+      const detail = { ...msg('a', 'Event'), messageType: 'T', templateJson: '{}', hasSchema: false } as MessageDetail;
       store.selectedKey.set('a');
       store.selectedDetail.set(detail);
 
@@ -136,6 +136,35 @@ describe('PulsarStore', () => {
       store.loadPlugin('x.dll');
       expect(store.toast()).toMatchObject({ kind: 'ok' });
       expect(api.getPlugin).toHaveBeenCalled();
+    });
+  });
+
+  describe('advisory validation', () => {
+    it('validatePayload records schema mismatch messages', () => {
+      api.validateMessage.mockReturnValue(of({ matches: false, messages: ['$.status: bad'] }));
+      store.validatePayload('a', '{"status":"x"}');
+      expect(store.schemaIssues()).toEqual(['$.status: bad']);
+    });
+
+    it('validatePayload clears issues when the payload matches', () => {
+      store.schemaIssues.set(['stale']);
+      api.validateMessage.mockReturnValue(of({ matches: true, messages: [] }));
+      store.validatePayload('a', '{}');
+      expect(store.schemaIssues()).toEqual([]);
+    });
+
+    it('a failed validate call is silent (issues cleared, no toast)', () => {
+      store.schemaIssues.set(['stale']);
+      api.validateMessage.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      store.validatePayload('a', '{}');
+      expect(store.schemaIssues()).toEqual([]);
+      expect(store.toast()).toBeNull();
+    });
+
+    it('clearSchemaIssues empties the list', () => {
+      store.schemaIssues.set(['x']);
+      store.clearSchemaIssues();
+      expect(store.schemaIssues()).toEqual([]);
     });
   });
 
