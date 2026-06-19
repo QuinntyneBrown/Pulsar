@@ -1,7 +1,15 @@
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+}
 .bar {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  width: 100%;
   padding: 12px 22px; border-bottom: 1px solid var(--border-soft);
-  background: linear-gradient(180deg, rgba(20,28,43,.9), rgba(11,15,23,.7)); backdrop-filter: blur(6px);
+  background: linear-gradient(180deg, rgba(20,28,43,.95), rgba(11,15,23,.85)); backdrop-filter: blur(10px);
 }
 .brand { display: flex; align-items: center; gap: 13px; }
 .brand__mark { position: relative; width: 30px; height: 30px; display: grid; place-items: center; }

@@ -89,7 +89,7 @@ button { font-family: inherit; }
   text-transform: uppercase;
   color: var(--text-dim);
 }
-.panel__body { padding: 14px 16px; overflow: auto; }
+.panel__body { padding: 14px 16px; overflow: auto; flex: 1; min-height: 0; }
 
 /* ---- buttons ---- */
 .btn {

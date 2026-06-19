@@ -1,13 +1,20 @@
-.shell { display: flex; flex-direction: column; height: 100vh; }
+:host { display: block; width: 100%; }
+.shell { display: flex; flex-direction: column; height: 100vh; width: 100%; overflow: hidden; }
 .layout {
   flex: 1; min-height: 0; display: grid; gap: 14px; padding: 14px;
   grid-template-columns: 290px minmax(0, 1fr) 390px;
+  grid-template-rows: minmax(0, 1fr);
 }
-.col-left, .col-center { min-height: 0; }
-.col-right { min-height: 0; display: grid; grid-template-rows: 1fr 1fr; gap: 14px; }
+.col-left, .col-center { min-height: 0; min-width: 0; }
+.col-right {
+  min-height: 0; min-width: 0; display: grid; gap: 14px;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+}
+.col-right > * { min-width: 0; min-height: 0; }
 @media (max-width: 1180px) {
-  .layout { grid-template-columns: 260px minmax(0, 1fr); }
-  .col-right { grid-column: 1 / -1; grid-template-rows: none; grid-template-columns: 1fr 1fr; }
+  .layout { grid-template-columns: 260px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+  .col-right { grid-column: 1 / -1; grid-template-rows: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 .toast {
   position: fixed; right: 22px; bottom: 22px; z-index: 60;
