@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pulsar — UI Design Mocks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="mocks.css">
+  <style>
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 28px 64px; }
+    .lead { color: var(--text-dim); max-width: 760px; }
+    .lead code { font-family: var(--mono); color: var(--accent); }
+    h1 { font-size: 28px; letter-spacing: .01em; }
+    h2 { font-size: 16px; margin: 38px 0 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .08em; }
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+    .card { background: linear-gradient(180deg, var(--panel), var(--bg-elev)); border: 1px solid var(--border-soft);
+            border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+    .card__preview { height: 232px; overflow: hidden; border-bottom: 1px solid var(--border-soft); background: var(--bg); position: relative; }
+    .card__preview iframe { width: 1300px; height: 880px; border: 0; transform: scale(.30); transform-origin: top left; pointer-events: none; }
+    .card__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .card__title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .card__desc { font-size: 13px; color: var(--text-dim); }
+    .card__foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .card a.open { color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600; }
+    .card a.open:hover { text-decoration: underline; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    th { color: var(--text-dim); font-weight: 600; }
+    td code, th code { font-family: var(--mono); color: var(--accent); font-size: 12px; }
+    .swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+    .sw { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border-soft);
+          border-radius: var(--radius-sm); background: var(--bg-elev); font-size: 12px; }
+    .sw i { width: 16px; height: 16px; border-radius: 4px; display: inline-block; border: 1px solid rgba(255,255,255,.12); }
+    .sw code { font-family: var(--mono); color: var(--text-faint); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Pulsar — UI Design Mocks</h1>
+    <p class="lead">
+      Static, presentation-only reproductions of the Pulsar dashboard, reverse-engineered from the
+      implemented Angular app under <code>frontend/src/app</code>. They share the real design system in
+      <code>frontend/src/styles.scss</code> (consolidated here into <code>mocks.css</code>) so the look matches
+      the running tool. No JavaScript or backend — these capture intended layout, states, and styling.
+    </p>
+
+    <h2>Screens</h2>
+    <div class="grid">
+
+      <div class="card">
+        <div class="card__preview"><iframe src="dashboard.html" title="Dashboard"></iframe></div>
+        <div class="card__body">
+          <div class="card__title">📊 Dashboard <span class="badge bg-Telemetry">populated</span></div>
+          <div class="card__desc">Plugin loaded, a message selected in the composer, one running and one stopped
+            cyclic job, the live activity feed (incl. a failure), and a success toast.</div>
+          <div class="card__foot">
+            <span class="faint" style="font-size:12px">all components</span>
+            <a class="open" href="dashboard.html">Open mock →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__preview"><iframe src="empty-state.html" title="Empty state"></iframe></div>
+        <div class="card__body">
+          <div class="card__title">🔌 Empty state <span class="badge bg-Other">initial</span></div>
+          <div class="card__desc">First run: no plugin loaded and Redis not yet connected. Each panel shows
+            its empty placeholder guiding the user to Settings.</div>
+          <div class="card__foot">
+            <span class="faint" style="font-size:12px">empty placeholders</span>
+            <a class="open" href="empty-state.html">Open mock →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__preview"><iframe src="settings.html" title="Settings dialog"></iframe></div>
+        <div class="card__body">
+          <div class="card__title">⚙ Settings dialog <span class="badge bg-Command">modal</span></div>
+          <div class="card__desc">The Settings modal over the dashboard: set the Redis connection string and
+            load/unload a message plugin by path.</div>
+          <div class="card__foot">
+            <span class="faint" style="font-size:12px">SettingsDialogComponent</span>
+            <a class="open" href="settings.html">Open mock →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <h2>Mock → component map</h2>
+    <table>
+      <tr><th>Mock region</th><th>Angular component</th><th>Notes</th></tr>
+      <tr><td>Header bar</td><td><code>HeaderBarComponent</code></td><td>Brand, plugin/Redis/Live/cyclic status chips, Settings.</td></tr>
+      <tr><td>Left panel</td><td><code>CatalogComponent</code></td><td>Messages grouped by category; selected item highlighted.</td></tr>
+      <tr><td>Center panel</td><td><code>ComposerComponent</code></td><td>Channel + JSON payload editor; Send once / Start cyclic.</td></tr>
+      <tr><td>Right top</td><td><code>JobsComponent</code></td><td>Running/stopped cyclic jobs with live counts.</td></tr>
+      <tr><td>Right bottom</td><td><code>ActivityFeedComponent</code></td><td>Per-publish stream (SSE), success/failure rows.</td></tr>
+      <tr><td>Modal</td><td><code>SettingsDialogComponent</code></td><td>Redis connection + plugin load/unload.</td></tr>
+      <tr><td>Toast</td><td><code>DashboardComponent</code></td><td>Transient ok/error notifications.</td></tr>
+    </table>
+
+    <h2>Design tokens</h2>
+    <div class="swatches">
+      <span class="sw"><i style="background:#0b0f17"></i> bg <code>#0b0f17</code></span>
+      <span class="sw"><i style="background:#141c2b"></i> panel <code>#141c2b</code></span>
+      <span class="sw"><i style="background:#243049"></i> border <code>#243049</code></span>
+      <span class="sw"><i style="background:#e7eef9"></i> text <code>#e7eef9</code></span>
+      <span class="sw"><i style="background:#38bdf8"></i> accent <code>#38bdf8</code></span>
+      <span class="sw"><i style="background:#34d399"></i> ok <code>#34d399</code></span>
+      <span class="sw"><i style="background:#fbbf24"></i> warn <code>#fbbf24</code></span>
+      <span class="sw"><i style="background:#f87171"></i> danger <code>#f87171</code></span>
+      <span class="sw"><i style="background:#a78bfa"></i> event <code>#a78bfa</code></span>
+    </div>
+    <p class="lead" style="margin-top:14px; font-size:12px">
+      Type: <code>Inter</code> / system-ui for UI, <code>ui-monospace</code> for channels, payloads, and IDs.
+      Radius <code>10px</code> panels / <code>7px</code> controls.
+    </p>
+  </div>
+</body>
+</html>
