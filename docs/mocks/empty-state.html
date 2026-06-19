@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pulsar — Empty state (mock)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="mocks.css">
+</head>
+<body>
+  <!-- Initial state: no plugin loaded, Redis not yet connected.
+       Each panel shows its empty placeholder. -->
+  <div class="shell">
+
+    <header class="bar">
+      <div class="brand">
+        <div class="brand__mark"><span class="ring"></span><span class="core"></span></div>
+        <div>
+          <div class="brand__name">Pulsar</div>
+          <div class="brand__tag">Redis Pub/Sub message generator</div>
+        </div>
+      </div>
+      <div class="status">
+        <div class="chip"><span class="dot dot--off"></span> No plugin</div>
+        <div class="chip"><span class="dot dot--off"></span> Redis offline</div>
+        <div class="chip"><span class="dot dot--ok dot--pulse"></span> Live</div>
+        <button class="btn">⚙ Settings</button>
+      </div>
+    </header>
+
+    <div class="layout">
+
+      <aside class="col-left">
+        <section class="panel catalog">
+          <div class="panel__head"><div class="panel__title">📚 Message Catalog</div></div>
+          <div class="panel__body">
+            <div class="empty">
+              <div class="empty__icon">🔌</div>
+              <div>No plugin loaded.</div>
+              <div class="faint">Open <b>Settings</b> to load a message library.</div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="col-center">
+        <section class="panel composer">
+          <div class="panel__head"><div class="panel__title">✏️ Compose &amp; Publish</div></div>
+          <div class="panel__body">
+            <div class="empty">
+              <div class="empty__icon">🔌</div>
+              <div>Load a plugin to begin.</div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="col-right">
+        <section class="panel jobs">
+          <div class="panel__head"><div class="panel__title">⟳ Cyclic Jobs</div></div>
+          <div class="panel__body">
+            <div class="empty"><div class="faint">No cyclic jobs yet. Start one from the composer.</div></div>
+          </div>
+        </section>
+
+        <section class="panel feed">
+          <div class="panel__head"><div class="panel__title">📡 Live Activity</div></div>
+          <div class="panel__body">
+            <div class="empty"><div class="faint">Published messages will stream here.</div></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

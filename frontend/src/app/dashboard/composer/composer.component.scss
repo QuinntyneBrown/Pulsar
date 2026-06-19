@@ -1,0 +1,15 @@
+.composer { height: 100%; }
+.panel__body { gap: 16px; display: flex; flex-direction: column; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; }
+.title { font-size: 18px; }
+.json-bar { display: flex; align-items: center; justify-content: space-between; }
+.json-actions { display: flex; gap: 4px; }
+.err { color: var(--danger); font-size: 12px; margin-top: 4px; }
+.hint { font-size: 11px; margin-top: 6px; }
+.actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: auto;
+  padding-top: 14px; border-top: 1px solid var(--border-soft); }
+.cyclic { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.interval { width: 92px; text-align: right; }
+.preset--on { background: var(--panel-2); color: var(--accent); border-color: var(--border); }
+/* hide number spin buttons for a cleaner look */
+input[type=number]::-webkit-inner-spin-button { opacity: .4; }

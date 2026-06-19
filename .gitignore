@@ -1,0 +1,21 @@
+# .NET
+bin/
+obj/
+*.user
+
+# Node / Angular
+node_modules/
+frontend/dist/
+.angular/
+
+# Plugins copied/dropped in next to the API at build or runtime
+backend/src/Pulsar.Api/plugins/*
+!backend/src/Pulsar.Api/plugins/.gitkeep
+
+# Angular build output served by the API
+backend/src/Pulsar.Api/wwwroot/*
+!backend/src/Pulsar.Api/wwwroot/.gitkeep
+
+# Misc
+.vs/
+*.log

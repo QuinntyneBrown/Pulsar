@@ -1,0 +1,23 @@
+<div class="shell">
+  <app-header-bar (open)="settingsOpen.set(true)" />
+
+  <div class="layout">
+    <aside class="col-left"><app-catalog /></aside>
+    <main class="col-center"><app-composer /></main>
+    <aside class="col-right">
+      <app-jobs />
+      <app-activity-feed />
+    </aside>
+  </div>
+</div>
+
+@if (settingsOpen()) {
+  <app-settings-dialog (close)="settingsOpen.set(false)" />
+}
+
+@if (store.toast(); as t) {
+  <div class="toast" [class.toast--ok]="t.kind === 'ok'" [class.toast--err]="t.kind === 'error'">
+    <span class="dot" [class.dot--ok]="t.kind === 'ok'" [class.dot--off]="t.kind === 'error'"></span>
+    {{ t.text }}
+  </div>
+}

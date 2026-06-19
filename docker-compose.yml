@@ -1,0 +1,7 @@
+# Convenience Redis for running Pulsar locally:  docker compose up -d
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: pulsar-redis
+    ports:
+      - "6379:6379"

@@ -1,0 +1,22 @@
+.shell { display: flex; flex-direction: column; height: 100vh; }
+.layout {
+  flex: 1; min-height: 0; display: grid; gap: 14px; padding: 14px;
+  grid-template-columns: 290px minmax(0, 1fr) 390px;
+}
+.col-left, .col-center { min-height: 0; }
+.col-right { min-height: 0; display: grid; grid-template-rows: 1fr 1fr; gap: 14px; }
+@media (max-width: 1180px) {
+  .layout { grid-template-columns: 260px minmax(0, 1fr); }
+  .col-right { grid-column: 1 / -1; grid-template-rows: none; grid-template-columns: 1fr 1fr; }
+}
+.toast {
+  position: fixed; right: 22px; bottom: 22px; z-index: 60;
+  display: flex; align-items: center; gap: 10px;
+  max-width: 460px; padding: 12px 16px; border-radius: var(--radius);
+  background: var(--panel); border: 1px solid var(--border);
+  box-shadow: 0 14px 40px rgba(0,0,0,.45); font-size: 13px;
+  animation: slideIn .2s ease-out;
+}
+.toast--ok { border-left: 3px solid var(--ok); }
+.toast--err { border-left: 3px solid var(--danger); }
+@keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

@@ -1,0 +1,15 @@
+.jobs { height: 100%; }
+.job { padding: 11px 12px; border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  margin-bottom: 9px; background: var(--bg-elev); }
+.job--stopped { opacity: .62; }
+.job__row { display: flex; align-items: center; gap: 8px; }
+.job__name { font-weight: 600; font-size: 13px; flex: 1; }
+.job__state { font-size: 10px; font-weight: 700; letter-spacing: .05em; color: var(--text-faint);
+  text-transform: uppercase; }
+.job__state.on { color: var(--ok); }
+.job__meta { font-size: 11px; margin: 4px 0 7px; }
+.job__stats { display: flex; gap: 12px; align-items: center; font-size: 12px; }
+.stat b { color: var(--text); font-size: 14px; }
+.stat--bad b { color: var(--danger); }
+.job__err { color: var(--danger); font-size: 11px; margin-top: 6px; }
+.job__actions { display: flex; gap: 6px; margin-top: 9px; }

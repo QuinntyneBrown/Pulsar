@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5AD91C06-9480-4C55-BA2C-7B15D72FBFF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulsar.Contracts", "src\Pulsar.Contracts\Pulsar.Contracts.csproj", "{3C69F9B5-8CC4-4053-8687-DD97C5435462}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulsar.Core", "src\Pulsar.Core\Pulsar.Core.csproj", "{A1FDE193-D512-4890-A951-10E6ACE2557F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulsar.Redis", "src\Pulsar.Redis\Pulsar.Redis.csproj", "{CA2C320B-52DA-4025-8F51-9FEF9E31A7E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulsar.Api", "src\Pulsar.Api\Pulsar.Api.csproj", "{98811FC5-9857-422B-AA16-965867FBF8E1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5C11E51C-965F-4B53-B78F-D56FA515A9E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulsar.SampleMessages", "samples\Pulsar.SampleMessages\Pulsar.SampleMessages.csproj", "{B7D3D514-25E1-4133-8E4D-22EFE3B4FD33}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9063774C-8A07-41B8-A8FD-765C3C9DC7C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pulsar.Tests", "tests\Pulsar.Tests\Pulsar.Tests.csproj", "{ACBFB905-174C-43F9-BEBA-DF5C10F84670}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3C69F9B5-8CC4-4053-8687-DD97C5435462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C69F9B5-8CC4-4053-8687-DD97C5435462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C69F9B5-8CC4-4053-8687-DD97C5435462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C69F9B5-8CC4-4053-8687-DD97C5435462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1FDE193-D512-4890-A951-10E6ACE2557F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1FDE193-D512-4890-A951-10E6ACE2557F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1FDE193-D512-4890-A951-10E6ACE2557F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1FDE193-D512-4890-A951-10E6ACE2557F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA2C320B-52DA-4025-8F51-9FEF9E31A7E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA2C320B-52DA-4025-8F51-9FEF9E31A7E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA2C320B-52DA-4025-8F51-9FEF9E31A7E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA2C320B-52DA-4025-8F51-9FEF9E31A7E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98811FC5-9857-422B-AA16-965867FBF8E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98811FC5-9857-422B-AA16-965867FBF8E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98811FC5-9857-422B-AA16-965867FBF8E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98811FC5-9857-422B-AA16-965867FBF8E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7D3D514-25E1-4133-8E4D-22EFE3B4FD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7D3D514-25E1-4133-8E4D-22EFE3B4FD33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7D3D514-25E1-4133-8E4D-22EFE3B4FD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7D3D514-25E1-4133-8E4D-22EFE3B4FD33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACBFB905-174C-43F9-BEBA-DF5C10F84670}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACBFB905-174C-43F9-BEBA-DF5C10F84670}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACBFB905-174C-43F9-BEBA-DF5C10F84670}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACBFB905-174C-43F9-BEBA-DF5C10F84670}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3C69F9B5-8CC4-4053-8687-DD97C5435462} = {5AD91C06-9480-4C55-BA2C-7B15D72FBFF7}
+		{A1FDE193-D512-4890-A951-10E6ACE2557F} = {5AD91C06-9480-4C55-BA2C-7B15D72FBFF7}
+		{CA2C320B-52DA-4025-8F51-9FEF9E31A7E2} = {5AD91C06-9480-4C55-BA2C-7B15D72FBFF7}
+		{98811FC5-9857-422B-AA16-965867FBF8E1} = {5AD91C06-9480-4C55-BA2C-7B15D72FBFF7}
+		{B7D3D514-25E1-4133-8E4D-22EFE3B4FD33} = {5C11E51C-965F-4B53-B78F-D56FA515A9E5}
+		{ACBFB905-174C-43F9-BEBA-DF5C10F84670} = {9063774C-8A07-41B8-A8FD-765C3C9DC7C9}
+	EndGlobalSection
+EndGlobal

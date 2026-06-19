@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pulsar — Dashboard (mock)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="mocks.css">
+</head>
+<body>
+  <!-- Reverse-engineered from DashboardComponent + its child components.
+       State: plugin loaded, Heartbeat selected, one running + one stopped job,
+       a live feed with a failure, and a success toast. -->
+  <div class="shell">
+
+    <!-- HeaderBarComponent -->
+    <header class="bar">
+      <div class="brand">
+        <div class="brand__mark"><span class="ring"></span><span class="core"></span></div>
+        <div>
+          <div class="brand__name">Pulsar</div>
+          <div class="brand__tag">Redis Pub/Sub message generator</div>
+        </div>
+      </div>
+      <div class="status">
+        <div class="chip"><span class="badge bg-Command">PLUGIN</span>Sample Messages <span class="faint">· 6 msgs</span></div>
+        <div class="chip"><span class="dot dot--ok"></span> Redis <span class="mono faint">localhost:6379</span></div>
+        <div class="chip"><span class="dot dot--ok dot--pulse"></span> Live</div>
+        <div class="chip"><span class="dot dot--ok dot--pulse"></span> 1 cyclic</div>
+        <button class="btn">⚙ Settings</button>
+      </div>
+    </header>
+
+    <div class="layout">
+
+      <!-- CatalogComponent -->
+      <aside class="col-left">
+        <section class="panel catalog">
+          <div class="panel__head"><div class="panel__title">📚 Message Catalog</div></div>
+          <div class="panel__body">
+
+            <div class="group">
+              <div class="group__head"><span class="badge bg-Telemetry">Telemetry</span><span class="faint">3</span></div>
+              <button class="item item--active">
+                <span class="item__name">Heartbeat</span>
+                <span class="item__chan mono">telemetry.heartbeat</span>
+              </button>
+              <button class="item">
+                <span class="item__name">Temperature Reading</span>
+                <span class="item__chan mono">telemetry.temperature</span>
+              </button>
+              <button class="item">
+                <span class="item__name">Battery Status</span>
+                <span class="item__chan mono">telemetry.battery</span>
+              </button>
+            </div>
+
+            <div class="group">
+              <div class="group__head"><span class="badge bg-Event">Event</span><span class="faint">2</span></div>
+              <button class="item">
+                <span class="item__name">Operator Alert</span>
+                <span class="item__chan mono">events.alert</span>
+              </button>
+              <button class="item">
+                <span class="item__name">Mode Changed</span>
+                <span class="item__chan mono">events.mode-changed</span>
+              </button>
+            </div>
+
+            <div class="group">
+              <div class="group__head"><span class="badge bg-Fault">Fault</span><span class="faint">1</span></div>
+              <button class="item">
+                <span class="item__name">Subsystem Fault</span>
+                <span class="item__chan mono">faults.subsystem</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+      </aside>
+
+      <!-- ComposerComponent (Heartbeat selected) -->
+      <main class="col-center">
+        <section class="panel composer">
+          <div class="panel__head">
+            <div class="panel__title">✏️ Compose &amp; Publish</div>
+            <span class="badge bg-Telemetry">Telemetry</span>
+          </div>
+          <div class="panel__body">
+            <div class="head">
+              <div>
+                <h2 class="title">Heartbeat</h2>
+                <div class="faint mono">HeartbeatTelemetry</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label">Redis channel</label>
+              <input class="input input--mono" value="telemetry.heartbeat">
+            </div>
+
+            <div class="field">
+              <div class="json-bar">
+                <label class="field__label">Payload (JSON)</label>
+                <div class="json-actions">
+                  <button class="btn btn--ghost btn--sm">Format</button>
+                  <button class="btn btn--ghost btn--sm">Reset template</button>
+                </div>
+              </div>
+              <textarea class="textarea" rows="14" spellcheck="false">{
+  "deviceId": "device-001",
+  "sequenceNumber": 0,
+  "status": "Nominal",
+  "uptimeSeconds": 3600
+}</textarea>
+              <div class="faint hint">The plugin's serializer turns this payload into the bytes published to Redis.</div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn--primary">▷ Send once</button>
+              <div class="cyclic">
+                <span class="faint">every</span>
+                <input class="input interval mono" type="number" min="10" step="10" value="1000">
+                <span class="faint">ms</span>
+                <button class="btn btn--ghost btn--sm">250 ms</button>
+                <button class="btn btn--ghost btn--sm">500 ms</button>
+                <button class="btn btn--ghost btn--sm preset--on">1 s</button>
+                <button class="btn btn--ghost btn--sm">5 s</button>
+                <button class="btn btn--ghost btn--sm">30 s</button>
+                <button class="btn">⟳ Start cyclic</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- JobsComponent + ActivityFeedComponent -->
+      <aside class="col-right">
+
+        <section class="panel jobs">
+          <div class="panel__head">
+            <div class="panel__title">⟳ Cyclic Jobs</div>
+            <span class="chip"><span class="dot dot--ok dot--pulse"></span>1 running</span>
+          </div>
+          <div class="panel__body">
+
+            <div class="job">
+              <div class="job__row">
+                <span class="dot dot--ok dot--pulse"></span>
+                <span class="job__name">Heartbeat</span>
+                <span class="job__state on">Running</span>
+              </div>
+              <div class="job__meta mono faint">telemetry.heartbeat · every 250 ms</div>
+              <div class="job__stats">
+                <span class="stat"><b>512</b> sent</span>
+                <span class="faint">last 14:02:11</span>
+              </div>
+              <div class="job__actions">
+                <button class="btn btn--sm">◼ Stop</button>
+                <button class="btn btn--danger btn--sm">✕ Remove</button>
+              </div>
+            </div>
+
+            <div class="job job--stopped">
+              <div class="job__row">
+                <span class="dot"></span>
+                <span class="job__name">Subsystem Fault</span>
+                <span class="job__state">Stopped</span>
+              </div>
+              <div class="job__meta mono faint">faults.subsystem · every 5000 ms</div>
+              <div class="job__stats">
+                <span class="stat"><b>12</b> sent</span>
+                <span class="stat stat--bad"><b>1</b> failed</span>
+                <span class="faint">last 14:01:43</span>
+              </div>
+              <div class="job__err">⚠ Failed to publish to channel 'faults.subsystem': No connection is active.</div>
+              <div class="job__actions">
+                <button class="btn btn--danger btn--sm">✕ Remove</button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <section class="panel feed">
+          <div class="panel__head">
+            <div class="panel__title">📡 Live Activity</div>
+            <button class="btn btn--ghost btn--sm">Clear</button>
+          </div>
+          <div class="panel__body">
+            <div class="row">
+              <span class="row__time mono faint">14:02:11.250</span>
+              <span class="dot dot--ok"></span>
+              <span class="row__src cyclic">cyclic</span>
+              <span class="row__name">Heartbeat</span>
+              <span class="row__chan mono faint">telemetry.heartbeat</span>
+              <span class="row__bytes faint">218B</span>
+            </div>
+            <div class="row">
+              <span class="row__time mono faint">14:02:11.000</span>
+              <span class="dot dot--ok"></span>
+              <span class="row__src cyclic">cyclic</span>
+              <span class="row__name">Heartbeat</span>
+              <span class="row__chan mono faint">telemetry.heartbeat</span>
+              <span class="row__bytes faint">218B</span>
+            </div>
+            <div class="row">
+              <span class="row__time mono faint">14:02:10.981</span>
+              <span class="dot dot--ok"></span>
+              <span class="row__src">manual</span>
+              <span class="row__name">Operator Alert</span>
+              <span class="row__chan mono faint">events.alert</span>
+              <span class="row__bytes faint">196B</span>
+            </div>
+            <div class="row">
+              <span class="row__time mono faint">14:02:10.750</span>
+              <span class="dot dot--ok"></span>
+              <span class="row__src cyclic">cyclic</span>
+              <span class="row__name">Heartbeat</span>
+              <span class="row__chan mono faint">telemetry.heartbeat</span>
+              <span class="row__bytes faint">218B</span>
+            </div>
+            <div class="row row--fail">
+              <span class="row__time mono faint">14:02:09.512</span>
+              <span class="dot dot--off"></span>
+              <span class="row__src">manual</span>
+              <span class="row__name">Subsystem Fault</span>
+              <span class="row__err">No connection is active.</span>
+            </div>
+            <div class="row">
+              <span class="row__time mono faint">14:02:09.500</span>
+              <span class="dot dot--ok"></span>
+              <span class="row__src cyclic">cyclic</span>
+              <span class="row__name">Heartbeat</span>
+              <span class="row__chan mono faint">telemetry.heartbeat</span>
+              <span class="row__bytes faint">218B</span>
+            </div>
+            <div class="row">
+              <span class="row__time mono faint">14:02:09.250</span>
+              <span class="dot dot--ok"></span>
+              <span class="row__src cyclic">cyclic</span>
+              <span class="row__name">Heartbeat</span>
+              <span class="row__chan mono faint">telemetry.heartbeat</span>
+              <span class="row__bytes faint">218B</span>
+            </div>
+          </div>
+        </section>
+
+      </aside>
+    </div>
+  </div>
+
+  <!-- success toast -->
+  <div class="toast toast--ok">
+    <span class="dot dot--ok"></span>
+    Published to events.alert (196 bytes).
+  </div>
+</body>
+</html>

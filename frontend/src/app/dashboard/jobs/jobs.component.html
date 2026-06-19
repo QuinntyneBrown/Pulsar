@@ -1,0 +1,34 @@
+<section class="panel jobs">
+  <div class="panel__head">
+    <div class="panel__title">⟳ Cyclic Jobs</div>
+    @if (store.runningCount() > 0) { <span class="chip"><span class="dot dot--ok dot--pulse"></span>{{ store.runningCount() }} running</span> }
+  </div>
+  <div class="panel__body">
+    @if (store.jobs().length === 0) {
+      <div class="empty"><div class="faint">No cyclic jobs yet. Start one from the composer.</div></div>
+    } @else {
+      @for (job of store.jobs(); track job.id) {
+        <div class="job" [class.job--stopped]="job.state === 'Stopped'">
+          <div class="job__row">
+            <span class="dot" [class.dot--ok]="job.state === 'Running'" [class.dot--pulse]="job.state === 'Running'"></span>
+            <span class="job__name">{{ job.displayName }}</span>
+            <span class="job__state" [class.on]="job.state === 'Running'">{{ job.state }}</span>
+          </div>
+          <div class="job__meta mono faint">{{ job.channel }} · every {{ job.intervalMs }} ms</div>
+          <div class="job__stats">
+            <span class="stat"><b>{{ job.publishedCount }}</b> sent</span>
+            @if (job.failureCount > 0) { <span class="stat stat--bad"><b>{{ job.failureCount }}</b> failed</span> }
+            @if (job.lastPublishedAt) { <span class="faint">last {{ job.lastPublishedAt | date:'HH:mm:ss' }}</span> }
+          </div>
+          @if (job.lastError) { <div class="job__err">⚠ {{ job.lastError }}</div> }
+          <div class="job__actions">
+            @if (job.state === 'Running') {
+              <button class="btn btn--sm" (click)="store.stopJob(job.id)">◼ Stop</button>
+            }
+            <button class="btn btn--danger btn--sm" (click)="store.removeJob(job.id)">✕ Remove</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>

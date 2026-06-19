@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Pulsar.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pulsar.Core\Pulsar.Core.csproj" />
+    <ProjectReference Include="..\Pulsar.Redis\Pulsar.Redis.csproj" />
+    <!-- Build the sample plugin and copy it next to the app, but DON'T reference
+         its types: the tool must stay ignorant of any concrete message library. -->
+    <ProjectReference Include="..\..\samples\Pulsar.SampleMessages\Pulsar.SampleMessages.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CopySamplePlugin" AfterTargets="Build">
+    <PropertyGroup>
+      <SamplePluginDll>$(MSBuildProjectDirectory)\..\..\samples\Pulsar.SampleMessages\bin\$(Configuration)\net8.0\Pulsar.SampleMessages.dll</SamplePluginDll>
+    </PropertyGroup>
+    <Copy SourceFiles="$(SamplePluginDll)" DestinationFolder="$(MSBuildProjectDirectory)\plugins"
+          SkipUnchangedFiles="true" Condition="Exists('$(SamplePluginDll)')" />
+    <Copy SourceFiles="$(SamplePluginDll)" DestinationFolder="$(OutDir)plugins"
+          SkipUnchangedFiles="true" Condition="Exists('$(SamplePluginDll)')" />
+  </Target>
+
+</Project>

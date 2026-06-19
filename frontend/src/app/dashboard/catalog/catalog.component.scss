@@ -1,0 +1,15 @@
+.catalog { height: 100%; }
+.panel__body { padding: 10px; }
+.group { margin-bottom: 14px; }
+.group__head { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 8px; }
+.item {
+  display: flex; flex-direction: column; gap: 3px; width: 100%; text-align: left;
+  padding: 9px 11px; margin-bottom: 4px; border-radius: var(--radius-sm);
+  background: transparent; border: 1px solid transparent; color: var(--text); cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.item:hover { background: var(--panel-2); }
+.item--active { background: var(--panel-2); border-color: var(--accent-strong);
+  box-shadow: inset 3px 0 0 var(--accent); }
+.item__name { font-size: 13px; font-weight: 500; }
+.item__chan { font-size: 11px; color: var(--text-faint); }

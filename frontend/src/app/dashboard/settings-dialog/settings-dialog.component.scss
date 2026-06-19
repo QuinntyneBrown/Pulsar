@@ -1,0 +1,10 @@
+.backdrop { position: fixed; inset: 0; background: rgba(4,8,15,.66); backdrop-filter: blur(3px);
+  display: grid; place-items: center; z-index: 50; }
+.dialog { width: min(560px, 92vw); max-height: 86vh; box-shadow: 0 24px 70px rgba(0,0,0,.5); }
+.section { padding: 8px 0 18px; border-bottom: 1px solid var(--border-soft); }
+.section:last-child { border-bottom: none; padding-bottom: 4px; }
+.section__title { font-size: 14px; margin-bottom: 2px; }
+.section p { margin: 0 0 12px; font-size: 12px; }
+.row { display: flex; gap: 8px; }
+.row .input { flex: 1; }
+.status { display: flex; align-items: center; gap: 10px; margin-top: 11px; }

@@ -1,0 +1,28 @@
+<section class="panel feed">
+  <div class="panel__head">
+    <div class="panel__title">📡 Live Activity</div>
+    @if (store.activityLog().length > 0) {
+      <button class="btn btn--ghost btn--sm" (click)="store.clearActivity()">Clear</button>
+    }
+  </div>
+  <div class="panel__body">
+    @if (store.activityLog().length === 0) {
+      <div class="empty"><div class="faint">Published messages will stream here.</div></div>
+    } @else {
+      @for (a of store.activityLog(); track a._id) {
+        <div class="row" [class.row--fail]="!a.success">
+          <span class="row__time mono faint">{{ a.timestamp | date:'HH:mm:ss.SSS' }}</span>
+          <span class="dot" [class.dot--ok]="a.success" [class.dot--off]="!a.success"></span>
+          <span class="row__src" [class.cyclic]="a.source === 'cyclic'">{{ a.source }}</span>
+          <span class="row__name">{{ a.displayName }}</span>
+          <span class="row__chan mono faint">{{ a.channel }}</span>
+          @if (a.success) {
+            <span class="row__bytes faint">{{ a.byteCount }}B</span>
+          } @else {
+            <span class="row__err" [title]="a.error || ''">{{ a.error }}</span>
+          }
+        </div>
+      }
+    }
+  </div>
+</section>

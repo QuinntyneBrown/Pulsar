@@ -1,0 +1,31 @@
+<section class="panel catalog">
+  <div class="panel__head">
+    <div class="panel__title">📚 Message Catalog</div>
+  </div>
+  <div class="panel__body">
+    @if (!store.plugin().isLoaded) {
+      <div class="empty">
+        <div class="empty__icon">🔌</div>
+        <div>No plugin loaded.</div>
+        <div class="faint">Open <b>Settings</b> to load a message library.</div>
+      </div>
+    } @else if (store.messages().length === 0) {
+      <div class="empty"><div>This plugin exposes no messages.</div></div>
+    } @else {
+      @for (group of store.groups(); track group.category) {
+        <div class="group">
+          <div class="group__head">
+            <span class="badge bg-{{ group.category }}">{{ group.category }}</span>
+            <span class="faint">{{ group.messages.length }}</span>
+          </div>
+          @for (msg of group.messages; track msg.key) {
+            <button class="item" [class.item--active]="store.selectedKey() === msg.key" (click)="store.select(msg.key)">
+              <span class="item__name">{{ msg.displayName }}</span>
+              <span class="item__chan mono">{{ msg.defaultChannel }}</span>
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+</section>

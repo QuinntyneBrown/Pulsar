@@ -1,0 +1,51 @@
+<div class="backdrop" (click)="close.emit()">
+  <div class="dialog panel" (click)="$event.stopPropagation()">
+    <div class="panel__head">
+      <div class="panel__title">⚙ Settings</div>
+      <button class="btn btn--ghost btn--sm" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="panel__body">
+      <!-- Redis connection -->
+      <div class="section">
+        <h3 class="section__title">Redis connection</h3>
+        <p class="faint">Where cyclic messages, events, and faults are published.</p>
+        <div class="row">
+          <input class="input input--mono" [value]="connectionString()"
+                 (input)="connectionString.set($any($event.target).value)"
+                 placeholder="localhost:6379" />
+          <button class="btn btn--primary" (click)="connect()" [disabled]="!connectionString().trim()">Connect</button>
+        </div>
+        <div class="status">
+          @if (store.connection().isConnected) {
+            <span class="chip"><span class="dot dot--ok"></span> Connected · <span class="mono">{{ store.connection().endpoint }}</span></span>
+          } @else {
+            <span class="chip"><span class="dot dot--off"></span> {{ store.connection().error || 'Not connected' }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Plugin -->
+      <div class="section">
+        <h3 class="section__title">Message plugin</h3>
+        <p class="faint">Path to a .NET assembly that exposes a message catalog and serializer
+          (implements <span class="mono">IPulsarPlugin</span>).</p>
+        <div class="row">
+          <input class="input input--mono" [value]="pluginPath()"
+                 (input)="pluginPath.set($any($event.target).value)"
+                 placeholder="plugins/MyMessages.dll" />
+          <button class="btn btn--primary" (click)="load()" [disabled]="!pluginPath().trim()">Load</button>
+        </div>
+        <div class="status">
+          @if (store.plugin().isLoaded) {
+            <span class="chip"><span class="dot dot--ok"></span> {{ store.plugin().plugin?.name }}
+              <span class="faint">· {{ store.plugin().plugin?.messageCount }} messages</span></span>
+            <button class="btn btn--danger btn--sm" (click)="store.unloadPlugin()">Unload</button>
+          } @else {
+            <span class="chip"><span class="dot dot--off"></span> No plugin loaded</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
