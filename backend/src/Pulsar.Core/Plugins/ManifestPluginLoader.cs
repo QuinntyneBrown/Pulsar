@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -208,55 +207,9 @@ public sealed class ManifestPluginLoader
             return Prettify(File.ReadAllText(examplePath));
         }
 
-        if (schema is not null)
-        {
-            // 2. The schema's first `examples` entry.
-            if (schema.Root.TryGetProperty("examples", out var examples)
-                && examples.ValueKind == JsonValueKind.Array && examples.GetArrayLength() > 0)
-                return Prettify(examples[0].GetRawText());
-
-            // 3. The schema's `default`, when it is an object.
-            if (schema.Root.TryGetProperty("default", out var def) && def.ValueKind == JsonValueKind.Object)
-                return Prettify(def.GetRawText());
-
-            // 4. A skeleton built from each property's default/type.
-            var skeleton = BuildSkeleton(schema.Root);
-            if (skeleton is not null)
-                return Prettify(skeleton.ToJsonString());
-        }
-
-        // 5. Nothing to go on.
-        return "{}";
-    }
-
-    private static JsonObject? BuildSkeleton(JsonElement schema)
-    {
-        if (!schema.TryGetProperty("properties", out var props) || props.ValueKind != JsonValueKind.Object)
-            return null;
-
-        var obj = new JsonObject();
-        foreach (var prop in props.EnumerateObject())
-        {
-            if (prop.Value.TryGetProperty("default", out var def))
-            {
-                obj[prop.Name] = JsonNode.Parse(def.GetRawText());
-                continue;
-            }
-
-            var type = prop.Value.TryGetProperty("type", out var t) && t.ValueKind == JsonValueKind.String
-                ? t.GetString()
-                : null;
-            obj[prop.Name] = type switch
-            {
-                "string" => "",
-                "integer" or "number" => (JsonNode)0,
-                "boolean" => false,
-                "array" => new JsonArray(),
-                "object" => new JsonObject(),
-                _ => null,
-            };
-        }
-        return obj;
+        // 2-5. Anything derivable from the schema (examples/default/skeleton) is one
+        // concern, shared with the CLI via SchemaExample so the two never diverge.
+        return schema is not null ? SchemaExample.FromSchema(schema) : "{}";
     }
 
     private static (string Relative, string? Pointer) SplitPointer(string reference)

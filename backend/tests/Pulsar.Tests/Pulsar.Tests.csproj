@@ -16,6 +16,7 @@
     <ProjectReference Include="..\..\src\Pulsar.Core\Pulsar.Core.csproj" />
     <ProjectReference Include="..\..\src\Pulsar.Redis\Pulsar.Redis.csproj" />
     <ProjectReference Include="..\..\src\Pulsar.Api\Pulsar.Api.csproj" />
+    <ProjectReference Include="..\..\src\Pulsar.Cli\Pulsar.Cli.csproj" />
     <ProjectReference Include="..\..\samples\Pulsar.SampleMessages\Pulsar.SampleMessages.csproj" />
   </ItemGroup>
 

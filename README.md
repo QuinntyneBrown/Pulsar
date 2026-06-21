@@ -190,6 +190,38 @@ catalog atomically.
 
 ---
 
+## Command-line tool (`pulsar`)
+
+`backend/src/Pulsar.Cli` is a [.NET global tool](https://learn.microsoft.com/dotnet/core/tools/global-tools)
+for **authoring, validating, generating, and publishing** the data-only plugins above —
+without the UI. It references `Pulsar.Core`, so it reuses the exact loader and advisory
+validator the app uses; what `pulsar validate` accepts is what the app accepts. Design
+notes: [`docs/pulsar-cli-implementation-plan.html`](docs/pulsar-cli-implementation-plan.html).
+
+Run it during development with `dotnet run --project src/Pulsar.Cli -- <args>` (from
+`backend/`), or `dotnet pack` it and `dotnet tool install` to get a `pulsar` command.
+
+| Verb | What it does |
+| --- | --- |
+| `pulsar validate <manifest\|folder>` | Loads the catalog and checks each example against its schema. Exit `0` clean · `1` hard load error · `2` advisory mismatch (`--strict`→`1`, `--warn-only`→`0`) — CI-friendly. |
+| `pulsar list <manifest\|folder>` | Prints the messages in a catalog (key, category, channel, schema). |
+| `pulsar gen-example <schema.json>` | Emits a seed payload from a JSON Schema (`--pointer #/$defs/X` for a sub-schema). |
+| `pulsar new <name> --message KEY …` | Scaffolds a data-only plugin (manifest + starter schema/example per message), then loads it back to prove it's valid. |
+| `pulsar import openapi\|asyncapi\|jsonschema <spec> -o <dir>` | Generates a plugin from an existing contract — the catalog-as-data benefit, on tap. |
+| `pulsar publish <manifest> <key> [--redis …]` | Publishes one message to Redis. The schema check is advisory: a mismatch is warned, never blocked (fault injection is the point). |
+
+```bash
+cd backend
+dotnet run --project src/Pulsar.Cli -- validate samples/Pulsar.SampleMessages/manifest/pulsar.plugin.json
+dotnet run --project src/Pulsar.Cli -- import openapi ./my-api.json -o ./my-plugin
+```
+
+Adding a verb is one file implementing `ICliCommand` + one DI line; adding an `import`
+format is one file implementing `ISpecImporter`. The root command is assembled by
+discovering every registered command, so neither edits the composition root (OCP).
+
+---
+
 ## Architecture
 
 Radically simple, SOLID, and message-agnostic. The repo splits into a self-contained
@@ -202,6 +234,7 @@ Radically simple, SOLID, and message-agnostic. The repo splits into a self-conta
 | **backend/src/Pulsar.Core** | Domain logic — manifest + legacy plugin loading (`CatalogLoader`), built-in adapters, advisory JSON-Schema validation, the editor template, one-shot publishing, the cyclic scheduler, and the transport/activity abstractions. No web, no Redis client. |
 | **backend/src/Pulsar.Redis** | The single place a Redis client appears: `IMessageTransport` over `StackExchange.Redis`. |
 | **backend/src/Pulsar.Api** | ASP.NET Core 8 host — minimal-API endpoints, the SSE activity stream, and SPA hosting. |
+| **backend/src/Pulsar.Cli** | The `pulsar` global tool (System.CommandLine, command-per-file): validate/list/gen-example/new/import/publish. Reuses `Pulsar.Core`; spec-parser deps stay here. |
 | **backend/samples/Pulsar.SampleMessages** | The reference plugin in both forms: a data-only `manifest/` (schemas + examples + `json-envelope`) and the legacy compiled `IPulsarPlugin`. |
 | **frontend** | Angular 17.2.2 standalone app: a signal-based store, an SSE live feed, and a three-pane dashboard with advisory schema validation. |
 | **backend/tests/Pulsar.Tests** | xUnit unit + in-memory HTTP integration tests. |
