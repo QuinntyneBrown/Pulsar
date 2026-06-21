@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pulsar — CLI Implementation Plan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --bg-elev: #111824;
+      --panel: #141c2b;
+      --border: #243049;
+      --border-soft: #1c2638;
+      --text: #e7eef9;
+      --text-dim: #9fb0c9;
+      --text-faint: #66758f;
+      --accent: #38bdf8;
+      --accent-strong: #0ea5e9;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --radius: 10px;
+      --radius-sm: 7px;
+      --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "Fira Code", Consolas, monospace;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+
+    body {
+      background: radial-gradient(1200px 600px at 80% -10%, rgba(56, 189, 248, 0.08), transparent 60%), var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 44px 28px 80px; }
+
+    h1 { font-size: 30px; letter-spacing: 0.01em; margin: 0 0 10px; }
+    h2 {
+      font-size: 13px; margin: 44px 0 16px; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700;
+      padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+    }
+    h3 { font-size: 16px; margin: 26px 0 10px; }
+    h4 { font-size: 13px; margin: 18px 0 8px; color: var(--text-dim); }
+
+    p { margin: 0 0 14px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code { font-family: var(--mono); color: var(--accent); font-size: 0.88em; }
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    pre code { color: var(--text); font-size: inherit; }
+
+    .lead { color: var(--text-dim); max-width: 820px; font-size: 15px; }
+    .lead code { color: var(--accent); }
+
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 8px 18px;
+      margin: 16px 0 8px; padding: 12px 16px;
+      background: var(--bg-elev); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); font-size: 12.5px; color: var(--text-dim);
+    }
+    .meta b { color: var(--text); font-weight: 600; }
+    .pill {
+      display: inline-block; padding: 1px 9px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+      background: rgba(56,189,248,0.12); color: var(--accent);
+      border: 1px solid rgba(56,189,248,0.35);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 16px 0; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    thead th { color: var(--accent); font-weight: 600; border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: rgba(255,255,255,0.015); }
+    td code, th code { font-size: 12px; }
+
+    ul, ol { margin: 0 0 14px 0; padding-left: 22px; }
+    li { margin-bottom: 7px; }
+
+    .note {
+      background: var(--panel);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius-sm);
+      padding: 12px 15px; margin: 16px 0; font-size: 13px; color: var(--text-dim);
+    }
+    .note strong { color: var(--accent); }
+    .note.warn { border-left-color: var(--warn); }
+    .note.warn strong { color: var(--warn); }
+
+    .ok { color: var(--ok); font-weight: 600; }
+    .warn-t { color: var(--warn); font-weight: 600; }
+    .danger { color: var(--danger); font-weight: 600; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+    @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+
+    hr { border: none; border-top: 1px solid var(--border-soft); margin: 36px 0; }
+    footer { margin-top: 48px; color: var(--text-faint); font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Pulsar CLI — Implementation Plan</h1>
+  <p class="lead">
+    A <code>pulsar</code> command-line tool that authors, validates, and generates the
+    <strong>data-only plugins</strong> (manifest + JSON Schemas + examples) that Pulsar consumes —
+    reusing <code>Pulsar.Core</code> so the CLI can never disagree with what the running tool accepts.
+  </p>
+
+  <div class="meta">
+    <span><b>Status:</b> <span class="pill">Proposed</span></span>
+    <span><b>Date:</b> 2026-06-20</span>
+    <span><b>Implements the on-ramp for:</b> <a href="adr/integration/0001-json-standardized-message-model.md">ADR-0001</a></span>
+    <span><b>Stack:</b> System.CommandLine · Microsoft.Extensions (Host/DI/Logging/Options) · SOLID</span>
+    <span><b>Packaging:</b> .NET global tool (<code>pulsar</code>)</span>
+  </div>
+
+  <h2>Context — why build this</h2>
+  <p>
+    Pulsar plugins are now <strong>pure data</strong> (ADR-0001): a <code>pulsar.plugin.json</code>
+    manifest + JSON Schemas + example files, consumed via a built-in adapter
+    (see <code>backend/samples/Pulsar.SampleMessages/manifest</code>). That design explicitly aims
+    for catalogs that are <em>hand-authorable, diffable, and generatable from contracts the downstream
+    team already owns</em> (AsyncAPI / OpenAPI / JSON Schema).
+  </p>
+  <p>What's missing is the tooling that makes that promise real and low-friction:</p>
+  <ul>
+    <li>authoring a manifest + N schemas + N examples by hand is tedious (quick-start §9);</li>
+    <li>examples can silently <strong>drift</strong> from their schemas — the one risk ADR-0001 flagged; and</li>
+    <li>the "generate from existing contracts" benefit has <strong>no on-ramp</strong>.</li>
+  </ul>
+  <p>
+    A <code>pulsar</code> CLI fills this gap. Because it <strong>references <code>Pulsar.Core</code></strong>,
+    it reuses the <em>same</em> loader and validator the running tool uses — there is one source of truth
+    for "what is a valid plugin."
+  </p>
+
+  <h2>Decisions taken</h2>
+  <ul>
+    <li><strong>Scope = Full:</strong> authoring (<code>validate</code>, <code>new</code>,
+      <code>gen-example</code>, <code>list</code>) + <code>publish</code> (one-shot to Redis) +
+      <code>import</code> (AsyncAPI / OpenAPI / JSON-Schema &rarr; plugin folder).</li>
+    <li><strong>Packaging = .NET global tool:</strong> <code>&lt;PackAsTool&gt;true&lt;/PackAsTool&gt;</code>,
+      <code>&lt;ToolCommandName&gt;pulsar&lt;/ToolCommandName&gt;</code> — matches the existing
+      <code>mvp</code> / <code>create-code-cli</code> tools.</li>
+    <li><strong>Stack:</strong> System.CommandLine, command-per-file, Microsoft.Extensions
+      (Hosting/DI/Logging/Options/Configuration), SOLID.</li>
+  </ul>
+
+  <h2>Definition of done</h2>
+  <ul>
+    <li>New project <code>backend/src/Pulsar.Cli</code> in <code>Pulsar.sln</code>, building on
+      net8.0 under the existing <code>Directory.Build.props</code> (nullable / implicit-usings / latest).</li>
+    <li><code>pulsar --help</code> lists all verbs; each verb works against the bundled sample.</li>
+    <li>Authoring verbs need <strong>only</strong> <code>Pulsar.Core</code>; <code>publish</code> adds
+      <code>Pulsar.Redis</code>; <code>import</code> adds spec-parser packages — and those parser deps
+      live <strong>only</strong> in the CLI (Core stays dependency-light).</li>
+    <li>CLI tests in <code>backend/tests/Pulsar.Tests</code> (xUnit, hand-written doubles,
+      <code>TestConsole</code>), green alongside the existing suite.</li>
+    <li><code>validate</code> returns meaningful exit codes for CI.</li>
+  </ul>
+
+  <hr>
+
+  <h2>Architecture</h2>
+
+  <h3>Project layout — command-per-file</h3>
+<pre><code>backend/src/Pulsar.Cli/
+├─ Pulsar.Cli.csproj           # Exe + PackAsTool; refs Pulsar.Core, Pulsar.Redis
+├─ Program.cs                  # composition root: Host + DI + RootCommand assembly + invoke
+├─ CliOptions.cs              # bound options (reuses "Pulsar" section: RedisConnectionString)
+├─ Abstractions/
+│  └─ ICliCommand.cs          # the OCP seam: `Command Build();`
+├─ Commands/                   # one verb per file (SRP)
+│  ├─ ValidateCommand.cs
+│  ├─ NewCommand.cs
+│  ├─ GenExampleCommand.cs
+│  ├─ ListCommand.cs
+│  ├─ PublishCommand.cs
+│  └─ ImportCommand.cs        # parent verb with asyncapi/openapi/jsonschema subcommands
+├─ Authoring/
+│  ├─ PluginWriter.cs         # writes manifest + schemas/ + examples/ (shared by new + import)
+│  └─ Importers/              # one importer per format (SRP/OCP)
+│     ├─ ISpecImporter.cs
+│     ├─ JsonSchemaImporter.cs
+│     ├─ AsyncApiImporter.cs
+│     └─ OpenApiImporter.cs
+└─ Rendering/
+   └─ ConsoleReport.cs        # formats ValidationResult / catalog tables to IConsole</code></pre>
+
+  <h3>Composition root — Microsoft.Extensions</h3>
+  <p><code>Program.cs</code> does only wiring:</p>
+  <ol>
+    <li><code>Host.CreateApplicationBuilder(args)</code> — Configuration (appsettings + env + args),
+      Logging, and DI in one place.</li>
+    <li><code>services.Configure&lt;PulsarOptions&gt;(config.GetSection(PulsarOptions.SectionName))</code> —
+      reuse Core's existing <code>PulsarOptions</code> ("Pulsar" section: <code>RedisConnectionString</code>,
+      <code>PluginPath</code>).</li>
+    <li><code>services.AddPulsarCore();</code> and <code>services.AddPulsarRedis();</code> — reuse the
+      existing extension methods (all singletons via <code>TryAddSingleton</code>) verbatim.</li>
+    <li>Register each command — <code>services.AddSingleton&lt;ICliCommand, ValidateCommand&gt;();</code> …
+      each importer — <code>services.AddSingleton&lt;ISpecImporter, OpenApiImporter&gt;();</code> …
+      plus <code>PluginWriter</code>.</li>
+    <li>Configure console logging; a global <code>--verbose</code> option raises the level
+      (default <code>Warning</code> &rarr; <code>Information</code>/<code>Debug</code>).</li>
+    <li>Build the host, resolve <code>IEnumerable&lt;ICliCommand&gt;</code>, add each <code>.Build()</code>
+      to a <code>RootCommand</code>, then <code>await rootCommand.InvokeAsync(args)</code>.</li>
+  </ol>
+  <div class="note">
+    <strong>DI bridge:</strong> handlers read parsed values from System.CommandLine and call methods on
+    the DI-resolved command instance (constructor-injected Core services) — no reflection magic.
+    <code>System.CommandLine.Hosting</code>'s <code>UseHost</code> is a viable alternative but adds
+    another prerelease surface; the manual wiring above is simpler and fully testable.
+  </div>
+
+  <h3>SOLID mapping</h3>
+  <ul>
+    <li><strong>SRP</strong> — one verb per file; a command only <em>parses &rarr; delegates &rarr; renders</em>.
+      Domain logic stays in <code>Pulsar.Core</code>; scaffolding I/O in <code>PluginWriter</code>;
+      formatting in <code>ConsoleReport</code>.</li>
+    <li><strong>OCP</strong> — adding a verb = one new <code>ICliCommand</code> file + one DI line.
+      <code>Program.cs</code> iterates <code>IEnumerable&lt;ICliCommand&gt;</code>, so the root assembly
+      never changes. Same for <code>import</code> formats via <code>IEnumerable&lt;ISpecImporter&gt;</code>.</li>
+    <li><strong>LSP</strong> — every verb is substitutable as <code>ICliCommand</code>; every importer as
+      <code>ISpecImporter</code>.</li>
+    <li><strong>ISP</strong> — <code>ICliCommand</code> is a single method; commands depend only on the few
+      Core services they use, not a god-service.</li>
+    <li><strong>DIP</strong> — commands depend on Core abstractions (<code>CatalogLoader</code>,
+      <code>MessagePublishService</code>, <code>IMessageTransport</code>, <code>ISpecImporter</code>)
+      injected via ctor; output via System.CommandLine's <code>IConsole</code> (swappable with
+      <code>TestConsole</code> in tests). Concretes wired only in <code>Program.cs</code>.</li>
+  </ul>
+
+  <hr>
+
+  <h2>Commands</h2>
+  <p>Each verb is thin — new code mostly parses input and delegates to existing Core.</p>
+  <table>
+    <thead>
+      <tr><th>Verb</th><th>Signature</th><th>Reuses</th><th>Exit codes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>validate</code></td>
+        <td><code>pulsar validate &lt;manifest|folder&gt; [--strict] [--warn-only]</code></td>
+        <td><code>CatalogLoader.Load</code>; re-check each entry's example with
+          <code>SchemaValidator.Validate</code> / <code>MessageTemplateService.Validate</code></td>
+        <td><span class="ok">0</span> ok · <span class="danger">1</span> hard load error ·
+          <span class="warn-t">2</span> advisory mismatch (<code>--strict</code>&rarr;1,
+          <code>--warn-only</code>&rarr;0)</td>
+      </tr>
+      <tr>
+        <td><code>list</code></td>
+        <td><code>pulsar list &lt;manifest|folder&gt;</code></td>
+        <td><code>CatalogLoader.Load</code>, <code>LoadedCatalog.Messages</code>, <code>CatalogEntry</code></td>
+        <td>0 / 1</td>
+      </tr>
+      <tr>
+        <td><code>gen-example</code></td>
+        <td><code>pulsar gen-example &lt;schema.json&gt; [--pointer #/$defs/X] [-o file]</code></td>
+        <td><code>CompiledSchema.ParseWithPointer</code>; <strong>new</strong>
+          <code>SchemaExample.FromSchema</code> (see Core change)</td>
+        <td>0 / 1</td>
+      </tr>
+      <tr>
+        <td><code>new</code></td>
+        <td><code>pulsar new &lt;name&gt; [-o dir] [--adapter json-passthrough|json-envelope] [--message KEY ...]</code></td>
+        <td><code>PluginManifest</code>/<code>MessageManifestEntry</code>, <code>BuiltInAdapters.Names</code>,
+          <code>MessageTemplateService.JsonOptions</code>; writes via <code>PluginWriter</code>; self-validates</td>
+        <td>0 / 1</td>
+      </tr>
+      <tr>
+        <td><code>publish</code></td>
+        <td><code>pulsar publish &lt;manifest&gt; &lt;key&gt; [--channel c] [--payload file|--stdin] [--redis conn]</code></td>
+        <td><code>PluginManagementService.LoadAsync</code> + <code>PluginHost</code>,
+          <code>IMessageTransport.ConnectAsync</code>,
+          <code>MessagePublishService.PublishAsync</code> &rarr; <code>PublishResult</code></td>
+        <td>0 / 1; <span class="warn-t">warns</span> (never blocks) on schema mismatch — matches the
+          fault-injection philosophy</td>
+      </tr>
+      <tr>
+        <td><code>import</code></td>
+        <td><code>pulsar import asyncapi|openapi|jsonschema &lt;spec&gt; -o dir [--adapter ...]</code></td>
+        <td><code>ISpecImporter</code> &rarr; <code>PluginWriter</code>; then runs the
+          <code>validate</code> path as a self-check</td>
+        <td>0 / 1</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <strong>Errors:</strong> a System.CommandLine middleware catches <code>PulsarException</code> (and its
+    subtypes in <code>PulsarExceptions.cs</code>) and writes a friendly message to stderr with exit
+    <code>1</code>; unexpected exceptions get a generic message + exit <code>1</code>.
+  </div>
+
+  <h3>Import design</h3>
+  <ul>
+    <li><code>ISpecImporter</code> &rarr;
+      <code>{ string Format; PluginDraft Import(Stream spec, ImportOptions opts); }</code>, where
+      <code>PluginDraft = { PluginManifest manifest, IReadOnlyList&lt;(string relPath, string json)&gt; schemas, examples }</code>.</li>
+    <li><code>JsonSchemaImporter</code> — the schema is already JSON Schema: emit one message, copy the
+      schema, derive a channel from its <code>title</code>. <strong>Zero new deps.</strong></li>
+    <li><code>AsyncApiImporter</code> — parse YAML/JSON, walk <code>channels</code> +
+      <code>components.messages.*.payload</code> (payloads are JSON Schema); one message per channel/operation.</li>
+    <li><code>OpenApiImporter</code> — load with <code>Microsoft.OpenApi.Readers</code>; emit one message
+      per component schema; channel from schema name.</li>
+    <li><code>PluginWriter</code> is shared by <code>new</code> and every importer (DRY): creates
+      <code>dir/pulsar.plugin.json</code>, <code>dir/schemas/*.schema.json</code>,
+      <code>dir/examples/*.json</code>, then runs validation on the result.</li>
+  </ul>
+
+  <h3>One required Core change (small, justified)</h3>
+  <p>
+    The schema&rarr;example logic (<code>BuildSkeleton</code> + the <code>examples</code>/<code>default</code>
+    fallbacks) is currently <strong>private</strong> inside
+    <code>ManifestPluginLoader.ResolveExample</code> (<code>Plugins/ManifestPluginLoader.cs:200-260</code>).
+    Extract the schema-only part into a public helper so the loader and the CLI share one source of truth:
+  </p>
+  <ul>
+    <li>Add <code>backend/src/Pulsar.Core/Messages/SchemaExample.cs</code> &rarr;
+      <code>public static string FromSchema(CompiledSchema schema)</code> returning pretty JSON
+      (schema <code>examples[0]</code> &rarr; <code>default</code> &rarr; property-default/type skeleton
+      &rarr; <code>"{}"</code>).</li>
+    <li>Refactor <code>ManifestPluginLoader.ResolveExample</code> to keep "explicit example file wins",
+      then delegate to <code>SchemaExample.FromSchema</code>. Net behaviour unchanged; covered by existing tests.</li>
+  </ul>
+  <p>This is the only edit outside the new project — and it <em>removes</em> duplication rather than adding it.</p>
+
+  <hr>
+
+  <h2>Dependencies (CLI project only)</h2>
+  <table>
+    <thead><tr><th>Package</th><th>Version</th><th>For</th></tr></thead>
+    <tbody>
+      <tr><td><code>System.CommandLine</code></td><td><code>2.0.0-beta4.22272.1</code> (or GA if available — adjust <code>SetHandler</code>&rarr;<code>SetAction</code>)</td><td>parsing, help, exit codes</td></tr>
+      <tr><td><code>Microsoft.Extensions.Hosting</code></td><td><code>8.0.x</code></td><td>DI + Logging + Configuration + Options in one</td></tr>
+      <tr><td><code>Microsoft.OpenApi.Readers</code></td><td>latest <code>1.6.x</code></td><td><code>import openapi</code></td></tr>
+      <tr><td><code>YamlDotNet</code></td><td>latest <code>16.x</code></td><td><code>import asyncapi</code> (YAML specs)</td></tr>
+    </tbody>
+  </table>
+  <p>
+    <code>Pulsar.Core</code> stays on its current <code>Microsoft.Extensions.*.Abstractions</code>
+    (8.0.2) only — the parser deps never reach it.
+  </p>
+
+  <h2>Phasing</h2>
+  <ol>
+    <li><strong>P0 — skeleton &amp; seam:</strong> project + <code>Pulsar.sln</code> entry +
+      <code>Program.cs</code> host/DI + <code>ICliCommand</code> + RootCommand assembly +
+      exception&rarr;exit middleware + <code>list</code> (simplest) + first <code>TestConsole</code> test.
+      Proves the architecture end-to-end.</li>
+    <li><strong>P1 — <code>validate</code>:</strong> highest value, no external deps; wire CI exit codes.</li>
+    <li><strong>P2 —</strong> <code>SchemaExample</code> Core extraction + <code>gen-example</code> +
+      <code>new</code> + <code>PluginWriter</code>.</li>
+    <li><strong>P3 — <code>import</code>:</strong> <code>ISpecImporter</code> + 3 importers, reusing
+      <code>PluginWriter</code>.</li>
+    <li><strong>P4 — <code>publish</code></strong> (Redis) and <strong>packaging</strong>
+      (<code>PackAsTool</code>, README "CLI" section).</li>
+  </ol>
+
+  <hr>
+
+  <h2>Testing</h2>
+  <ul>
+    <li>Add CLI tests to <code>backend/tests/Pulsar.Tests</code> (add a <code>ProjectReference</code> to
+      <code>Pulsar.Cli</code>), matching the repo's single-test-project, xUnit, hand-written-double convention.</li>
+    <li>Drive each command through a <code>RootCommand</code> with System.CommandLine
+      <strong><code>TestConsole</code></strong>; assert exit code + captured output. Use temp dirs for
+      <code>new</code>/<code>import</code> outputs.</li>
+    <li>Fixtures: reuse the bundled sample at
+      <code>backend/samples/Pulsar.SampleMessages/manifest</code> (already copied into test output by the test csproj).</li>
+    <li>Key cases: <code>validate</code> clean&rarr;0, drifted example&rarr;2, broken manifest&rarr;1;
+      <code>new</code>&rarr;folder that <code>validate</code> then passes; <code>gen-example</code> honours
+      <code>--pointer</code>; <code>publish</code> mismatch warns but still publishes (assert against a fake
+      transport, mirroring <code>MessagePublishServiceTests</code>).</li>
+  </ul>
+
+  <h2>Verification (manual, end-to-end)</h2>
+  <p>From <code>backend/</code> (so <code>global.json</code> pins SDK 8.0):</p>
+<pre><code>dotnet build
+dotnet run --project src/Pulsar.Cli -- validate samples/Pulsar.SampleMessages/manifest/pulsar.plugin.json   # exit 0
+dotnet run --project src/Pulsar.Cli -- list     samples/Pulsar.SampleMessages/manifest/pulsar.plugin.json
+dotnet run --project src/Pulsar.Cli -- new MyPlugin --message Foo --adapter json-envelope -o ./tmp/myplugin
+dotnet run --project src/Pulsar.Cli -- gen-example samples/Pulsar.SampleMessages/manifest/schemas/heartbeat.schema.json
+dotnet run --project src/Pulsar.Cli -- import openapi path/to/api.json -o ./tmp/from-openapi
+# Redis up (docker compose up -d):
+dotnet run --project src/Pulsar.Cli -- publish samples/Pulsar.SampleMessages/manifest/pulsar.plugin.json HeartbeatTelemetry --redis localhost:6379
+dotnet test</code></pre>
+  <p>
+    Confirm the publish on the wire with
+    <code>docker exec -it pulsar-redis redis-cli psubscribe "telemetry.*"</code>.
+  </p>
+  <div class="note warn">
+    <strong>Caveat (machine-specific):</strong> Windows Smart App Control in enforce mode can block
+    freshly-built unsigned binaries from <code>dotnet run</code>/<code>test</code>. The CLI is a normal
+    app (not a plugin DLL), but the same SAC behaviour may apply on this machine — it is not a design issue.
+  </div>
+
+  <footer>
+    Pulsar — CLI Implementation Plan · generated 2026-06-20 · companion to
+    <a href="adr/integration/0001-json-standardized-message-model.md">ADR-0001</a> and
+    <a href="json-standardized-message-model.md">the JSON message-model trade-study</a>.
+  </footer>
+
+</div>
+</body>
+</html>
