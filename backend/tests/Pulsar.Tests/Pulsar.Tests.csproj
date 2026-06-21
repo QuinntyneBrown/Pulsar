@@ -17,12 +17,11 @@
     <ProjectReference Include="..\..\src\Pulsar.Redis\Pulsar.Redis.csproj" />
     <ProjectReference Include="..\..\src\Pulsar.Api\Pulsar.Api.csproj" />
     <ProjectReference Include="..\..\src\Pulsar.Cli\Pulsar.Cli.csproj" />
-    <ProjectReference Include="..\..\samples\Pulsar.SampleMessages\Pulsar.SampleMessages.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Copy the data-only sample manifest into the test output (preserving its tree)
-         so tests can load it deterministically next to the sample assembly. -->
+         so tests can load it deterministically without building a sample assembly. -->
     <None Include="..\..\samples\Pulsar.SampleMessages\manifest\**\*.*"
           Link="manifest\%(RecursiveDir)%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" />

@@ -2,30 +2,20 @@ using Pulsar.Core.Activity;
 using Pulsar.Core.Cyclic;
 using Pulsar.Core.Plugins;
 using Pulsar.Core.Transport;
-using Pulsar.SampleMessages;
 
 namespace Pulsar.Tests;
 
 internal static class TestSupport
 {
-    /// <summary>Path to the built (legacy <c>IPulsarPlugin</c>) sample plugin assembly.</summary>
-    public static string SamplePluginPath => typeof(SamplePlugin).Assembly.Location;
-
-    /// <summary>
-    /// Path to the data-only sample manifest, copied next to the sample assembly in
-    /// the test output (see Pulsar.Tests.csproj).
-    /// </summary>
+    /// <summary>Path to the data-only sample manifest copied into the test output.</summary>
     public static string SampleManifestPath =>
-        Path.Combine(Path.GetDirectoryName(SamplePluginPath)!, "manifest", "pulsar.plugin.json");
+        Path.Combine(AppContext.BaseDirectory, "manifest", "pulsar.plugin.json");
 
     public static CatalogLoader CatalogLoader() =>
-        new(new LegacyPluginLoader(), new ManifestPluginLoader());
+        new(new ManifestPluginLoader());
 
     /// <summary>A host with the data-only manifest plugin loaded (the primary path).</summary>
     public static PluginHost LoadedHost() => HostLoadedFrom(SampleManifestPath);
-
-    /// <summary>A host with the legacy compiled plugin loaded (the back-compat path).</summary>
-    public static PluginHost LegacyLoadedHost() => HostLoadedFrom(SamplePluginPath);
 
     private static PluginHost HostLoadedFrom(string path)
     {

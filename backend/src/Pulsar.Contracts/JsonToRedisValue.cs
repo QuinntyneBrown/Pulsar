@@ -6,9 +6,8 @@ namespace Pulsar.Contracts;
 /// Pub/Sub.
 /// </summary>
 /// <remarks>
-/// This is the seam that replaces <see cref="IMessageSerializer"/>: it receives the
-/// already-edited JSON string rather than a rehydrated CLR object, so a plugin no
-/// longer needs to declare message types. Pulsar ships built-in adapters
+/// This seam receives the already-edited JSON string rather than a rehydrated CLR
+/// object, so a plugin does not need to declare message types. Pulsar ships built-in adapters
 /// (<c>json-passthrough</c>, <c>json-envelope</c>) that cover plain or enveloped
 /// JSON with no code at all. Supply a custom adapter — a <c>public static</c> method
 /// matching this delegate, referenced from the manifest as

@@ -15,8 +15,7 @@ public sealed class MessageTemplateService
 {
     /// <summary>
     /// JSON settings for the editor view: camelCase + case-insensitive matching,
-    /// indented, enums as readable strings. Shared by the loaders that prettify
-    /// examples and by the legacy shim that reflects a POCO to JSON.
+    /// indented, enums as readable strings. Shared by the loaders that prettify examples.
     /// </summary>
     public static JsonSerializerOptions JsonOptions { get; } = new(JsonSerializerDefaults.Web)
     {

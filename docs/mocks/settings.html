@@ -75,7 +75,7 @@
   "status": "Nominal",
   "uptimeSeconds": 3600
 }</textarea>
-              <div class="faint hint">The plugin's serializer turns this payload into the bytes published to Redis.</div>
+              <div class="faint hint">The plugin's adapter turns this payload into the bytes published to Redis.</div>
             </div>
           </div>
         </section>
@@ -121,10 +121,9 @@
 
         <div class="section">
           <h3 class="section__title">Message plugin</h3>
-          <p class="faint">Path to a .NET assembly that exposes a message catalog and serializer
-            (implements <span class="mono">IPulsarPlugin</span>).</p>
+          <p class="faint">Path to a <span class="mono">pulsar.plugin.json</span> manifest that declares the message catalog.</p>
           <div class="row">
-            <input class="input input--mono" value="plugins/Pulsar.SampleMessages.dll" placeholder="plugins/MyMessages.dll">
+            <input class="input input--mono" value="plugins/manifest/pulsar.plugin.json" placeholder="plugins/manifest/pulsar.plugin.json">
             <button class="btn btn--primary">Load</button>
           </div>
           <div class="status">

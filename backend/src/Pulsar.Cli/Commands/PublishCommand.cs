@@ -38,7 +38,7 @@ public sealed class PublishCommand : ICliCommand
 
     public Command Build()
     {
-        var manifestArg = new Argument<string>("manifest", "A manifest (.json), a plugin folder, or a legacy plugin (.dll).");
+        var manifestArg = new Argument<string>("manifest", "A manifest (.json) or plugin folder.");
         var keyArg = new Argument<string>("key", "The message key to publish.");
         var channelOpt = new Option<string?>("--channel", "Override the message's default channel.");
         var payloadOpt = new Option<string?>("--payload", "Path to a JSON payload file (default: the message's example).");

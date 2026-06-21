@@ -12,9 +12,8 @@ namespace Pulsar.Core.Plugins;
 /// <summary>
 /// Loads a data-only plugin from a <c>pulsar.plugin.json</c> manifest: JSON Schemas
 /// describe the messages, an example seeds each editor, and a named adapter (built-in
-/// or a referenced static method) turns edited JSON into wire bytes. No
-/// <see cref="IPulsarPlugin"/>, and — for the built-in adapters — no compiled code
-/// and therefore no assembly to load.
+/// or a referenced static method) turns edited JSON into wire bytes. Built-in adapters
+/// require no compiled code and therefore no assembly load.
 /// </summary>
 public sealed class ManifestPluginLoader
 {

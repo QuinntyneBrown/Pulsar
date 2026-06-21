@@ -25,15 +25,15 @@ describe('SettingsDialogComponent', () => {
   it('defaults the inputs when the store has no values', async () => {
     await build();
     expect(component.connectionString()).toBe('localhost:6379');
-    expect(component.pluginPath()).toBe('plugins/Pulsar.SampleMessages.dll');
+    expect(component.pluginPath()).toBe('plugins/manifest/pulsar.plugin.json');
   });
 
   it('seeds the inputs from existing store state', async () => {
     store.connection.set({ isConnected: true, endpoint: 'redis:7000', error: null });
-    store.plugin.set({ isLoaded: true, plugin: { name: 'P', sourcePath: 'custom/My.dll', loadedAt: 't', messageCount: 1 } });
+    store.plugin.set({ isLoaded: true, plugin: { name: 'P', sourcePath: 'custom/plugin.json', loadedAt: 't', messageCount: 1 } });
     await build();
     expect(component.connectionString()).toBe('redis:7000');
-    expect(component.pluginPath()).toBe('custom/My.dll');
+    expect(component.pluginPath()).toBe('custom/plugin.json');
   });
 
   it('connects using the trimmed connection string', async () => {
@@ -45,9 +45,9 @@ describe('SettingsDialogComponent', () => {
 
   it('loads the plugin using the trimmed path', async () => {
     await build();
-    component.pluginPath.set('  plugins/X.dll  ');
+    component.pluginPath.set('  plugins/x/pulsar.plugin.json  ');
     component.load();
-    expect(store.loadPlugin).toHaveBeenCalledWith('plugins/X.dll');
+    expect(store.loadPlugin).toHaveBeenCalledWith('plugins/x/pulsar.plugin.json');
   });
 
   it('emits close on the backdrop and the close button', async () => {

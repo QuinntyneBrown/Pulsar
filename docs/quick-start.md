@@ -225,9 +225,8 @@ The backend reads two settings from
 }
 ```
 
-- **`PluginPath`** — the catalog to auto-load on startup. It can point at a **manifest**
-  (`*.json`, the data-only path shown above) or a **plugin assembly** (`*.dll`, the
-  legacy `IPulsarPlugin` model). The default path is the sample manifest the build
+- **`PluginPath`** — the catalog to auto-load on startup. It points at a
+  `pulsar.plugin.json` manifest. The default path is the sample manifest the build
   copies into place.
 - **`RedisConnectionString`** — a StackExchange.Redis connection string. Change this to
   point at a different Redis (e.g. `my-host:6379,password=…`).
@@ -241,8 +240,7 @@ plugin stops any running cyclic jobs and swaps the catalog atomically.
 ## 9. Add your own message (data-only, no code)
 
 The fastest way to make Pulsar emit *your* messages is a **data-only manifest** — no
-assembly to compile, which also sidesteps Windows Smart App Control blocking
-freshly-built plugin DLLs (see Troubleshooting). Here's a minimal one.
+assembly to compile. Here's a minimal one.
 
 1. Create a folder for your plugin, e.g. `my-plugin/`, with this layout:
 
@@ -346,7 +344,7 @@ npm run e2e
 | **`http://localhost:4200` can't reach the API** | The backend isn't running, or you started the frontend without the proxy. Make sure step 3 is up on `:5179` and you launched the frontend with `npm start` (which uses `proxy.conf.json`). |
 | **Build picks the wrong .NET SDK / restore errors mentioning .NET 9+** | You ran `dotnet` from outside `backend/`, bypassing `global.json`. `cd backend` first. Confirm with `dotnet --version` *inside* `backend/` — it should report 8.0.x. |
 | **Port already in use (5179 or 4200)** | Another process holds the port. Stop it, or change the Kestrel URL in `appsettings.json` (and the proxy `target` in `frontend/proxy.conf.json` to match) / pass `ng serve --port`. |
-| **Windows blocks a freshly-built *plugin DLL*** | This is **Smart App Control** refusing to run a newly built, unsigned assembly — it can block the legacy `*.dll` plugin path and even `dotnet test`/`run`. Prefer the **data-only manifest** plugin (section 9), which loads no assembly. Don't try to fight SAC. |
+| **Windows blocks a freshly-built custom adapter DLL** | This is **Smart App Control** refusing to run a newly built, unsigned assembly. Prefer the **data-only manifest** plugin (section 9), which loads no assembly. If you need a custom adapter, build/sign/trust it using your normal Windows policy path. |
 | **`npm install` is slow or fails** | Ensure Node is 20+. Delete `frontend/node_modules` and retry. Corporate proxies may need npm registry config. |
 | **No `docker` command** | Install Docker Desktop, or skip Docker entirely and run any Redis on `localhost:6379` (then point `RedisConnectionString` at it). |
 
@@ -357,7 +355,7 @@ npm run e2e
 - **[README](../README.md)** — full feature tour, the HTTP API table, and the
   architecture overview.
 - **Writing plugins** — [README → Writing your own message plugin](../README.md#writing-your-own-message-plugin)
-  covers the manifest, custom adapters, and the legacy `IPulsarPlugin` model.
+  covers manifests and custom adapters.
 - **Message model** — [`docs/json-standardized-message-model.md`](json-standardized-message-model.md).
 - **UI design reference** — open [`docs/mocks/index.html`](mocks/index.html) in a browser.
 ```

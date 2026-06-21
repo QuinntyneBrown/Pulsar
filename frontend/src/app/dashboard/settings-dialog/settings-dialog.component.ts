@@ -12,7 +12,7 @@ export class SettingsDialogComponent {
   @Output() close = new EventEmitter<void>();
 
   readonly connectionString = signal(this.store.connection().endpoint ?? 'localhost:6379');
-  readonly pluginPath = signal(this.store.plugin().plugin?.sourcePath ?? 'plugins/Pulsar.SampleMessages.dll');
+  readonly pluginPath = signal(this.store.plugin().plugin?.sourcePath ?? 'plugins/manifest/pulsar.plugin.json');
 
   connect(): void { this.store.setConnection(this.connectionString().trim()); }
   load(): void { this.store.loadPlugin(this.pluginPath().trim()); }

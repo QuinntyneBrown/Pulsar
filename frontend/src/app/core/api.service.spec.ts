@@ -35,12 +35,12 @@ describe('ApiService', () => {
   });
 
   it('loadPlugin POSTs the path to /api/plugin/load', () => {
-    const info: PluginInfo = { name: 'Sample', sourcePath: 'x.dll', loadedAt: 't', messageCount: 3 };
-    service.loadPlugin('x.dll').subscribe();
+    const info: PluginInfo = { name: 'Sample', sourcePath: 'plugins/x/pulsar.plugin.json', loadedAt: 't', messageCount: 3 };
+    service.loadPlugin('plugins/x/pulsar.plugin.json').subscribe();
 
     const req = http.expectOne('/api/plugin/load');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ path: 'x.dll' });
+    expect(req.request.body).toEqual({ path: 'plugins/x/pulsar.plugin.json' });
     req.flush(info);
   });
 

@@ -24,7 +24,7 @@ describe('HeaderBarComponent', () => {
   });
 
   it('shows the plugin name and message count when loaded', () => {
-    store.plugin.set({ isLoaded: true, plugin: { name: 'Sample', sourcePath: 'p.dll', loadedAt: 't', messageCount: 9 } });
+    store.plugin.set({ isLoaded: true, plugin: { name: 'Sample', sourcePath: 'pulsar.plugin.json', loadedAt: 't', messageCount: 9 } });
     fixture.detectChanges();
     const text = el('[data-testid="plugin-status"]').textContent ?? '';
     expect(text).toContain('Sample');

@@ -3,8 +3,7 @@ using Pulsar.Contracts;
 namespace Pulsar.Core.Plugins;
 
 /// <summary>
-/// The deserialized form of a <c>pulsar.plugin.json</c> manifest — the
-/// catalog-as-data that replaces a compiled <see cref="IPulsarPlugin"/>.
+/// The deserialized form of a <c>pulsar.plugin.json</c> manifest: the catalog as data.
 /// </summary>
 /// <param name="Name">Display name of the plugin.</param>
 /// <param name="Adapter">

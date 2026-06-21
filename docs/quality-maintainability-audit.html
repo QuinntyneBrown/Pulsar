@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pulsar Codebase Quality and Maintainability Audit</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #5e6b82;
+      --line: #d8e0ec;
+      --soft: #eef3f9;
+      --accent: #1d70b8;
+      --ok: #18794e;
+      --warn: #9a6700;
+      --risk: #b42318;
+      --code: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.55 "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 34px 40px;
+      border-bottom: 5px solid var(--accent);
+    }
+    header h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.15; }
+    header p { margin: 0; color: #cbd5e1; max-width: 980px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 26px 20px 56px; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 20px;
+    }
+    nav a {
+      color: var(--accent);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 10px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 22px;
+      margin: 18px 0;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+    }
+    h2 { margin: 0 0 14px; font-size: 22px; }
+    h3 { margin: 18px 0 8px; font-size: 16px; }
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0 0 22px; padding: 0; }
+    li { margin: 5px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--soft); color: #24324a; }
+    code {
+      color: var(--code);
+      background: #eef2f7;
+      border: 1px solid #dbe3ef;
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 12px;
+    }
+    pre {
+      overflow: auto;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .metric b { display: block; font-size: 24px; line-height: 1.1; }
+    .muted { color: var(--muted); }
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: .02em;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .tag.ok { color: var(--ok); background: #e8f5ee; border-color: #b7e0c9; }
+    .tag.warn { color: var(--warn); background: #fff7df; border-color: #f3d98b; }
+    .tag.risk { color: var(--risk); background: #fff0ee; border-color: #f4b3ad; }
+    .tag.info { color: var(--accent); background: #edf6ff; border-color: #bddcf7; }
+    .finding {
+      border-left: 5px solid var(--line);
+      padding-left: 14px;
+      margin: 18px 0;
+    }
+    .finding.high { border-left-color: var(--risk); }
+    .finding.medium { border-left-color: var(--warn); }
+    .finding.low { border-left-color: var(--accent); }
+    .finding h3 { margin-top: 0; }
+    .evidence {
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 10px 0;
+    }
+    .callout {
+      border: 1px solid #bddcf7;
+      background: #edf6ff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pulsar Codebase Quality and Maintainability Audit</h1>
+    <p>Scope: current worktree under <code>C:\projects\Pulsar</code>. This audit reviewed backend, frontend, CLI, tests, documentation alignment, build configuration, and maintainability patterns.</p>
+  </header>
+
+  <main>
+    <nav aria-label="Audit sections">
+      <a href="#summary">Summary</a>
+      <a href="#inventory">Inventory</a>
+      <a href="#validation">Validation</a>
+      <a href="#strengths">Strengths</a>
+      <a href="#findings">Findings</a>
+      <a href="#coverage">Coverage</a>
+      <a href="#roadmap">Roadmap</a>
+    </nav>
+
+    <section id="summary">
+      <h2>Executive Summary</h2>
+      <p><strong>Overall state:</strong> Pulsar is a small, coherent codebase with a clean backend layering model, a practical data-only plugin architecture, and strong frontend behavior tests. The current implementation is maintainable enough for continued feature work, but a few correctness and governance gaps should be addressed before treating it as robust tooling for repeated team use.</p>
+      <div class="grid">
+        <div class="metric"><b>B+</b><span>Implementation quality</span></div>
+        <div class="metric"><b>B</b><span>Maintainability</span></div>
+        <div class="metric"><b>A-</b><span>Frontend test confidence</span></div>
+        <div class="metric"><b>C</b><span>Backend test confidence on this machine</span></div>
+      </div>
+      <p>The highest-priority issues are backend lifecycle correctness and verification reliability: cyclic jobs can race with plugin reload/unload, Redis connection state can diverge from the active multiplexer, and local backend tests did not actually execute because Windows application control blocked the built test assembly.</p>
+    </section>
+
+    <section id="inventory">
+      <h2>Repository Inventory</h2>
+      <table>
+        <tr><th>Area</th><th>Evidence</th><th>Audit notes</th></tr>
+        <tr><td>Backend</td><td>78 C# files, 4,129 C# lines, 7 projects in <code>backend\Pulsar.sln</code></td><td>API, Core, Redis transport, Contracts, CLI, tests, and sample plugin are separated cleanly.</td></tr>
+        <tr><td>Frontend</td><td>50 TypeScript files, 2,688 TypeScript lines, Angular 17.2.2, Jest, Playwright</td><td>Standalone components with a signal-based store and transport-level e2e mock.</td></tr>
+        <tr><td>Tests</td><td>13 backend test files, 21 Angular unit spec files, 10 Playwright spec files</td><td>Frontend tests are broad. Backend tests exist but were blocked locally by application-control policy.</td></tr>
+        <tr><td>Build settings</td><td><code>backend\Directory.Build.props:4-8</code>, <code>frontend\tsconfig.json</code></td><td>.NET nullable is enabled. Angular strict TypeScript and strict templates are enabled. No lint/analyzer gate is configured.</td></tr>
+        <tr><td>CI</td><td>No root <code>.github</code> directory found</td><td>Validation appears manual/documented rather than enforced by a repository workflow.</td></tr>
+      </table>
+    </section>
+
+    <section id="validation">
+      <h2>Validation Results</h2>
+      <table>
+        <tr><th>Command</th><th>Result</th><th>Notes</th></tr>
+        <tr><td><code>dotnet build Pulsar.sln --no-restore</code></td><td><span class="tag ok">Pass</span></td><td>Build succeeded with 0 warnings and 0 errors.</td></tr>
+        <tr><td><code>dotnet test Pulsar.sln</code></td><td><span class="tag warn">Blocked evidence</span></td><td>Solution built, but VSTest reported that <code>Pulsar.Tests.dll</code> was blocked by Application Control policy and no tests were available. The process returned exit code 0, so this is a verification-risk finding.</td></tr>
+        <tr><td><code>npm test -- --runInBand</code></td><td><span class="tag ok">Pass</span></td><td>11 Jest suites passed. 87 tests passed.</td></tr>
+        <tr><td><code>npm run build</code></td><td><span class="tag ok">Pass</span></td><td>Angular production build succeeded. Initial bundle total: 296.19 kB raw, 81.27 kB estimated transfer.</td></tr>
+        <tr><td><code>npm run e2e</code></td><td><span class="tag ok">Pass</span></td><td>38 Playwright Chromium tests passed using the mocked backend/SSE transport.</td></tr>
+      </table>
+    </section>
+
+    <section id="strengths">
+      <h2>Maintainability Strengths</h2>
+      <ul>
+        <li><strong>Clean backend layering.</strong> <code>Pulsar.Core</code> depends on abstractions, while Redis is isolated in <code>Pulsar.Redis</code> and HTTP concerns stay in <code>Pulsar.Api</code>.</li>
+        <li><strong>Data-only plugin direction is strong.</strong> Manifest loading, schema examples, built-in adapters, and the legacy adapter shim preserve old capability while lowering the cost of new plugin authoring.</li>
+        <li><strong>Good domain exception model.</strong> Expected errors map through a single API middleware, keeping endpoints small and readable.</li>
+        <li><strong>Frontend state ownership is simple.</strong> Components are mostly presentational; <code>PulsarStore</code> owns API calls, SSE updates, and derived state.</li>
+        <li><strong>Frontend testing is mature for this size.</strong> Unit tests cover store and component behavior, while Playwright validates end-to-end UI flows with deterministic HTTP and SSE mocks.</li>
+        <li><strong>Docs are unusually complete for a small tool.</strong> README, quick start, ADR, mocks, and CLI implementation plan make the intended architecture discoverable.</li>
+      </ul>
+    </section>
+
+    <section id="findings">
+      <h2>Prioritized Findings</h2>
+
+      <div class="finding high">
+        <h3><span class="tag risk">High</span> Cyclic job start can race plugin reload/unload</h3>
+        <p><strong>Impact:</strong> A cyclic job can start against the old catalog after existing jobs are cleared but before the old plugin is unloaded or replaced. If the old catalog owns a collectible plugin load context, the new job can hold and invoke an adapter from a context that is being disposed.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> <code>PluginManagementService.LoadAsync</code> clears jobs and then loads the host in two separate steps at <code>backend\src\Pulsar.Core\Plugins\PluginManagementService.cs:23-26</code>. <code>UnloadAsync</code> has the same split at <code>:29-32</code>. <code>CyclicJobManager.Start</code> reads <code>_host.Current</code> before it enters the manager gate at <code>backend\src\Pulsar.Core\Cyclic\CyclicJobManager.cs:47-71</code>. <code>ClearAllAsync</code> releases <code>_stopping</code> before the plugin host swap happens at <code>:103-119</code>.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Introduce one plugin lifecycle gate shared by plugin load/unload and cyclic start, or move job creation and host snapshot acquisition under a transaction owned by <code>PluginManagementService</code>. Add a concurrency test that attempts <code>LoadAsync</code>/<code>UnloadAsync</code> while starting jobs.</p>
+      </div>
+
+      <div class="finding high">
+        <h3><span class="tag risk">High</span> Redis status can diverge from the active connection</h3>
+        <p><strong>Impact:</strong> If a user has an existing Redis connection and then submits a blank or invalid connection string, <code>Status</code> becomes disconnected but <code>PublishAsync</code> can still use the previous <code>_mux</code>. The UI can report offline while publishes continue to the old endpoint.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> <code>RedisMessageTransport.ConnectAsync</code> captures <code>previous = _mux</code> at <code>backend\src\Pulsar.Redis\RedisMessageTransport.cs:38</code>. Blank/invalid input updates <code>_status</code> at <code>:31</code> and <code>:46</code> but does not clear or replace <code>_mux</code>. <code>PublishAsync</code> uses <code>var mux = _mux</code> at <code>:98</code> without checking <code>Status.IsConnected</code>.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Decide explicit semantics: either failed reconnect preserves the old connection and reports that it is still active, or failed reconnect clears/disposes <code>_mux</code>. Tests should cover successful reconnect, failed reconnect after a previous success, and publish behavior after each state.</p>
+      </div>
+
+      <div class="finding high">
+        <h3><span class="tag risk">High</span> Backend tests did not execute under the current environment</h3>
+        <p><strong>Impact:</strong> The repository has useful backend tests, but the current workstation cannot treat <code>dotnet test</code> as proof because VSTest skipped the assembly after an Application Control block. More concerning: the command returned exit code 0 while no tests were available.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> Running <code>dotnet test Pulsar.sln</code> built every backend project, then VSTest logged: <code>Skipping: Pulsar.Tests ... An Application Control policy has blocked this file</code>, followed by <code>No test is available</code>. The shell still reported exit code 0.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Add a CI workflow on a machine/pool where test assemblies can load. Locally, add a script that fails when test output contains <code>No test is available</code> or when expected test counts are absent. Consider a data-only test path that avoids freshly built unsigned plugin assemblies where possible.</p>
+      </div>
+
+      <div class="finding medium">
+        <h3><span class="tag warn">Medium</span> Frontend async requests can overwrite newer state</h3>
+        <p><strong>Impact:</strong> Rapid catalog selection or payload edits can produce out-of-order HTTP responses. A slow response for an older selection can overwrite <code>selectedDetail</code> after a newer key is selected. A slow validation response can show schema issues for a payload that is no longer in the editor.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> <code>PulsarStore.select</code> sets <code>selectedKey</code>, calls <code>api.getMessage</code>, and unconditionally writes <code>selectedDetail</code> in the subscription at <code>frontend\src\app\core\pulsar.store.ts:97-104</code>. <code>validatePayload</code> unconditionally writes <code>schemaIssues</code> at <code>:135-138</code>. <code>ComposerComponent</code> schedules validation with a raw timeout at <code>frontend\src\app\dashboard\composer\composer.component.ts:80-94</code>.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Use <code>switchMap</code>, request sequence IDs, or key/payload guards before committing responses. Clear pending validation timers on component destroy using <code>DestroyRef</code> or RxJS teardown helpers.</p>
+      </div>
+
+      <div class="finding medium">
+        <h3><span class="tag warn">Medium</span> Settings UI still describes only the legacy assembly plugin model</h3>
+        <p><strong>Impact:</strong> The product now prefers data-only manifest plugins, but the Settings dialog tells users to provide a .NET assembly implementing <code>IPulsarPlugin</code>. This increases support cost and steers users toward the path the docs are trying to de-emphasize.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> The Settings dialog text says <code>Path to a .NET assembly</code> and names <code>IPulsarPlugin</code> at <code>frontend\src\app\dashboard\settings-dialog\settings-dialog.component.html:31-32</code>. The placeholder is <code>plugins/MyMessages.dll</code> at <code>:36</code>. The TypeScript default is <code>plugins/Pulsar.SampleMessages.dll</code> at <code>frontend\src\app\dashboard\settings-dialog\settings-dialog.component.ts:15</code>. Meanwhile appsettings auto-loads <code>plugins/manifest/pulsar.plugin.json</code>.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Update the UI copy and defaults to mention manifest paths first, with compiled DLLs framed as legacy/custom-adapter support.</p>
+      </div>
+
+      <div class="finding medium">
+        <h3><span class="tag warn">Medium</span> Static quality gates are missing</h3>
+        <p><strong>Impact:</strong> The codebase relies on compiler strictness and tests, but has no linting, formatter enforcement, analyzer packages, warning-as-error policy, or CI workflow in the current tree. That lets style drift and maintainability regressions accumulate silently.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> <code>backend\Directory.Build.props:4-8</code> enables nullable and implicit usings but not analyzers or <code>TreatWarningsAsErrors</code>. <code>frontend\package.json:4-14</code> has build/test/e2e scripts but no lint script. No root <code>.github</code> directory was found.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Add a single <code>verify</code> script or workflow that runs format/lint/build/test/e2e. For .NET, consider <code>dotnet format --verify-no-changes</code>, built-in .NET analyzers, and warning-as-error in CI. For Angular, add ESLint and run it before tests.</p>
+      </div>
+
+      <div class="finding medium">
+        <h3><span class="tag warn">Medium</span> JSON Schema support is intentionally partial, but importers make that easy to miss</h3>
+        <p><strong>Impact:</strong> The validator explicitly covers a subset of JSON Schema and returns success on internal validator errors. That is a reasonable product choice for advisory validation, but generated/imported schemas from OpenAPI or AsyncAPI may include <code>$ref</code>, combinators, formats, additional properties, nullable semantics, or array tuple schemas that are silently not checked.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> <code>SchemaValidator</code> documents that it is <code>NOT a full draft-2020-12 implementation</code> at <code>backend\src\Pulsar.Core\Messages\SchemaValidator.cs:13-17</code> and returns OK on internal errors at <code>:20-24</code>. <code>CompiledSchema.ParseWithPointer</code> only navigates object properties at <code>backend\src\Pulsar.Core\Messages\CompiledSchema.cs:43-49</code>. <code>SchemaExample</code> chooses examples/default/skeleton only at <code>backend\src\Pulsar.Core\Messages\SchemaExample.cs:16-38</code>.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Surface validator capability in the UI or CLI output for imported contracts. Add tests around unsupported constructs so the behavior is intentional. If schema fidelity becomes important, replace the custom validator with a maintained JSON Schema library behind the existing <code>SchemaValidator</code> facade.</p>
+      </div>
+
+      <div class="finding low">
+        <h3><span class="tag info">Low</span> CLI depends on a beta command-line package and suppresses the warning</h3>
+        <p><strong>Impact:</strong> The CLI design is clean, but beta APIs can create churn. Suppressing <code>NU5104</code> hides the pre-release package warning from future maintainers.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> <code>backend\src\Pulsar.Cli\Pulsar.Cli.csproj:11-16</code> suppresses <code>NU5104</code> and references <code>System.CommandLine</code> <code>2.0.0-beta4.22272.1</code>.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Keep the package only if its API stability is acceptable for this tool. Track a migration issue, and isolate command parsing behind the existing command classes so replacement remains low-cost.</p>
+      </div>
+
+      <div class="finding low">
+        <h3><span class="tag info">Low</span> Time and randomness in built-in adapters are not injectable</h3>
+        <p><strong>Impact:</strong> <code>json-envelope</code> is useful, but it uses <code>Guid.NewGuid()</code> and <code>DateTimeOffset.UtcNow</code> directly. That is fine for production behavior, but it makes deterministic tests and replay scenarios harder.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> <code>BuiltInAdapters.JsonEnvelope</code> creates <code>correlationId</code> and <code>emittedAtUnixMs</code> directly at <code>backend\src\Pulsar.Core\Adapters\BuiltInAdapters.cs:32-40</code>.</p>
+        </div>
+        <p><strong>Recommendation:</strong> Leave this alone unless deterministic envelopes matter. If they do, route built-in adapter creation through a small factory that can accept <code>TimeProvider</code> and an ID provider.</p>
+      </div>
+
+      <div class="finding low">
+        <h3><span class="tag info">Low</span> Mobile and accessibility guarantees are not yet strong</h3>
+        <p><strong>Impact:</strong> The dashboard is optimized for a dense desktop tool surface. There is only one layout breakpoint, form labels are visual but not associated with inputs, and Playwright runs only Desktop Chrome. That is acceptable for an internal desktop tool, but should be explicit.</p>
+        <div class="evidence">
+          <p><strong>Evidence:</strong> The main layout fixes three columns and has one breakpoint at <code>frontend\src\app\dashboard\dashboard.component.scss:3-18</code>. Playwright config has only Desktop Chrome at <code>frontend\playwright.config.ts:27-29</code>. Labels in the composer/settings templates do not use <code>for</code>/<code>id</code> associations.</p>
+        </div>
+        <p><strong>Recommendation:</strong> If mobile/tablet support is desired, add viewport-specific e2e tests and a small-screen layout. Independently, associate labels with controls and add accessible names for icon-heavy buttons.</p>
+      </div>
+    </section>
+
+    <section id="coverage">
+      <h2>Coverage and Test Surface Assessment</h2>
+      <table>
+        <tr><th>Area</th><th>Current coverage</th><th>Gaps to close</th></tr>
+        <tr><td>Plugin loading</td><td>Manifest and legacy loaders, missing paths, bad adapters, schema/example loading, and file-lock behavior are covered.</td><td>Concurrent load/unload/start behavior, custom adapter unload behavior under active publish, and malformed manifest edge cases.</td></tr>
+        <tr><td>Publishing</td><td>Default channel, channel override, transport failure mapping, unknown message, and no-plugin cases are covered.</td><td>Redis reconnect semantics and publish-after-failed-reconnect behavior.</td></tr>
+        <tr><td>Cyclic jobs</td><td>Start/stop/remove and interval validation are covered.</td><td>Race with plugin reload/unload, remove awaiting stop completion, notifier behavior on removed jobs if required.</td></tr>
+        <tr><td>CLI</td><td><code>new</code>, <code>validate</code>, <code>gen-example</code>, and importers have meaningful tests.</td><td><code>publish</code> command behavior, mutually exclusive <code>--stdin</code>/<code>--payload</code>, overwrite cleanup, and real parser/root middleware integration.</td></tr>
+        <tr><td>Frontend store/components</td><td>Strong unit coverage for grouping, jobs, toasts, schema warnings, settings, and component actions.</td><td>Out-of-order request responses, teardown of timers/subscriptions, Settings copy drift, and mobile/accessibility behavior.</td></tr>
+        <tr><td>E2E</td><td>38 browser tests cover initial load, catalog, composer, publish, cyclic jobs, activity feed, connection, plugin lifecycle, live status, and settings dialog.</td><td>Only Chromium desktop is configured. E2E mocks frontend/backend contract behavior but do not prove real API integration.</td></tr>
+      </table>
+    </section>
+
+    <section id="roadmap">
+      <h2>Recommended Remediation Roadmap</h2>
+      <h3>First pass: correctness and verification</h3>
+      <ol>
+        <li>Fix plugin reload/unload and cyclic start synchronization. Add a deterministic concurrency test.</li>
+        <li>Define and test Redis reconnect semantics, especially failed reconnect after a previous success.</li>
+        <li>Add CI or a local verifier that fails if backend test discovery executes zero tests.</li>
+      </ol>
+
+      <h3>Second pass: frontend correctness and product alignment</h3>
+      <ol>
+        <li>Guard store writes against stale <code>getMessage</code> and <code>validateMessage</code> responses.</li>
+        <li>Update Settings dialog copy/defaults to prefer <code>pulsar.plugin.json</code> manifests.</li>
+        <li>Add teardown for intervals/timers if the app gains routing or component lifetimes beyond the current singleton dashboard.</li>
+      </ol>
+
+      <h3>Third pass: maintainability gates</h3>
+      <ol>
+        <li>Add a repository-level verification script and CI workflow.</li>
+        <li>Add .NET analyzers/format verification and Angular ESLint.</li>
+        <li>Document the intentional limits of advisory schema validation in CLI/UI output.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Final Assessment</h2>
+      <p>Pulsar's core architecture is sound: the domain is separated from Redis and ASP.NET, plugin concerns are localized, and the frontend has a clear state boundary. The main risks are not broad structural problems; they are lifecycle edge cases and missing gates that can let regressions pass unnoticed. Addressing the high-priority findings would materially improve confidence without requiring a rewrite.</p>
+      <p class="muted">Audit generated on 2026-06-21 from the current local worktree.</p>
+    </section>
+  </main>
+</body>
+</html>

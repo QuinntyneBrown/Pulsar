@@ -6,7 +6,7 @@ public abstract class PulsarException : Exception
     protected PulsarException(string message, Exception? inner = null) : base(message, inner) { }
 }
 
-/// <summary>A plugin assembly could not be loaded or did not contain a valid plugin.</summary>
+/// <summary>A plugin manifest or adapter could not be loaded.</summary>
 public sealed class PluginLoadException : PulsarException
 {
     public PluginLoadException(string message, Exception? inner = null) : base(message, inner) { }
@@ -24,17 +24,17 @@ public sealed class MessageNotFoundException : PulsarException
     public MessageNotFoundException(string key) : base($"No message with key '{key}' exists in the loaded plugin.") { }
 }
 
-/// <summary>The payload JSON supplied by the user could not be turned into a message instance.</summary>
+/// <summary>The payload JSON supplied by the user could not be processed.</summary>
 public sealed class MessageEditException : PulsarException
 {
     public MessageEditException(string message, Exception? inner = null) : base(message, inner) { }
 }
 
-/// <summary>The plugin's serializer threw while serializing a message.</summary>
+/// <summary>The plugin's adapter threw while converting a message for publishing.</summary>
 public sealed class SerializationFailedException : PulsarException
 {
     public SerializationFailedException(string key, Exception inner)
-        : base($"The plugin serializer failed for message '{key}': {inner.Message}", inner) { }
+        : base($"The plugin adapter failed for message '{key}': {inner.Message}", inner) { }
 }
 
 /// <summary>Publishing to the transport (Redis) failed.</summary>

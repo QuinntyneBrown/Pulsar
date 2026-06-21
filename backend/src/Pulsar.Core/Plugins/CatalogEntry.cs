@@ -4,12 +4,9 @@ using Pulsar.Core.Messages;
 namespace Pulsar.Core.Plugins;
 
 /// <summary>
-/// One publishable message in a loaded catalog. Unlike the legacy
-/// <see cref="MessageDescriptor"/>, a catalog entry carries <em>no CLR type</em>: the
-/// editor template is JSON, and the bytes on the wire come from
-/// <see cref="Adapter"/>. Both the data-only manifest path and the legacy
-/// <see cref="IPulsarPlugin"/> path produce these, so the rest of the tool depends
-/// only on this shape.
+/// One publishable message in a loaded manifest catalog. A catalog entry carries
+/// <em>no CLR type</em>: the editor template is JSON, and the bytes on the wire come
+/// from <see cref="Adapter"/>.
 /// </summary>
 public sealed class CatalogEntry
 {
@@ -48,8 +45,7 @@ public sealed class CatalogEntry
     public string DefaultChannel { get; }
 
     /// <summary>
-    /// A subtitle hint for the UI — the schema title (manifest) or the CLR type name
-    /// (legacy). Purely presentational.
+    /// A subtitle hint for the UI, usually the schema title. Purely presentational.
     /// </summary>
     public string? TypeHint { get; }
 

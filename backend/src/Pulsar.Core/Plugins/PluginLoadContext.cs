@@ -4,14 +4,14 @@ using System.Runtime.Loader;
 namespace Pulsar.Core.Plugins;
 
 /// <summary>
-/// Isolated load context for a plugin assembly and its private dependencies.
+/// Isolated load context for a custom adapter assembly and its private dependencies.
 /// </summary>
 /// <remarks>
 /// Shared, identity-sensitive assemblies — first and foremost
 /// <c>Pulsar.Contracts</c>, plus all framework assemblies — are deliberately
 /// <em>not</em> loaded here. Returning <c>null</c> from <see cref="Load"/> defers
-/// to the default load context, so the <see cref="Pulsar.Contracts.IPulsarPlugin"/>
-/// the host sees is the exact same type the plugin implements.
+/// to the default load context, so the <see cref="Pulsar.Contracts.JsonToRedisValue"/>
+/// delegate type is shared between the host and the adapter.
 /// </remarks>
 internal sealed class PluginLoadContext : AssemblyLoadContext
 {

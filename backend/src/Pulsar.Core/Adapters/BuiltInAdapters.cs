@@ -25,9 +25,8 @@ public static class BuiltInAdapters
 
     /// <summary>
     /// Wraps the payload as
-    /// <c>{ messageType, correlationId, emittedAtUnixMs, payload }</c>. This mirrors
-    /// the envelope produced by the reference <c>SampleJsonSerializer</c>, but driven
-    /// entirely by the edited JSON and the message key — no CLR type involved.
+    /// <c>{ messageType, correlationId, emittedAtUnixMs, payload }</c>, driven entirely
+    /// by the edited JSON and the message key — no CLR type involved.
     /// </summary>
     public static byte[] JsonEnvelope(string editedJson, MessageContext context)
     {

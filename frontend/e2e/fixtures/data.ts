@@ -17,50 +17,56 @@ export type {
 
 /** The plugin descriptor returned once a plugin is "loaded". */
 export const SAMPLE_PLUGIN: PluginInfo = {
-  name: 'Pulsar.SampleMessages',
-  sourcePath: 'plugins/Pulsar.SampleMessages.dll',
+  name: 'Sample Messages',
+  sourcePath: 'plugins/manifest/pulsar.plugin.json',
   loadedAt: '2026-06-19T12:00:00.000Z',
-  messageCount: 5,
+  messageCount: 6,
 };
 
 /**
- * Five messages spanning four categories. Deliberately ordered so the catalog's
- * category grouping (Telemetry → Event → Fault → Command) is observable, and so
+ * Six messages spanning three categories. Deliberately ordered so the catalog's
+ * category grouping (Telemetry -> Event -> Fault) is observable, and so
  * the first message (Heartbeat) is the one auto-selected on load.
  */
 export const SAMPLE_MESSAGES: MessageSummary[] = [
-  { key: 'heartbeat',    displayName: 'Heartbeat',       category: 'Telemetry', defaultChannel: 'telemetry.heartbeat' },
-  { key: 'position',     displayName: 'Position Report', category: 'Telemetry', defaultChannel: 'telemetry.position' },
-  { key: 'system-start', displayName: 'System Start',    category: 'Event',     defaultChannel: 'events.system' },
-  { key: 'overheat',     displayName: 'Overheat Alarm',  category: 'Fault',     defaultChannel: 'faults.overheat' },
-  { key: 'reboot',       displayName: 'Reboot Command',  category: 'Command',   defaultChannel: 'commands.reboot' },
+  { key: 'HeartbeatTelemetry',  displayName: 'Heartbeat',           category: 'Telemetry', defaultChannel: 'telemetry.heartbeat' },
+  { key: 'TemperatureReading',  displayName: 'Temperature Reading', category: 'Telemetry', defaultChannel: 'telemetry.temperature' },
+  { key: 'BatteryTelemetry',    displayName: 'Battery Status',      category: 'Telemetry', defaultChannel: 'telemetry.battery' },
+  { key: 'OperatorAlert',       displayName: 'Operator Alert',      category: 'Event',     defaultChannel: 'events.alert' },
+  { key: 'ModeChangedEvent',    displayName: 'Mode Changed',        category: 'Event',     defaultChannel: 'events.mode-changed' },
+  { key: 'SubsystemFault',      displayName: 'Subsystem Fault',     category: 'Fault',     defaultChannel: 'faults.subsystem' },
 ];
 
 export const SAMPLE_DETAILS: Record<string, MessageDetail> = {
-  heartbeat: {
+  HeartbeatTelemetry: {
     ...SAMPLE_MESSAGES[0],
-    messageType: 'Pulsar.SampleMessages.Heartbeat',
-    templateJson: '{\n  "deviceId": "device-001",\n  "uptimeSeconds": 0\n}',
+    messageType: 'Heartbeat',
+    templateJson: '{\n  "deviceId": "device-001",\n  "sequenceNumber": 0,\n  "status": "Nominal",\n  "uptimeSeconds": 3600\n}',
   },
-  position: {
+  TemperatureReading: {
     ...SAMPLE_MESSAGES[1],
-    messageType: 'Pulsar.SampleMessages.PositionReport',
-    templateJson: '{\n  "lat": 0,\n  "lon": 0\n}',
+    messageType: 'Temperature Reading',
+    templateJson: '{\n  "sensorId": "sensor-temp-1",\n  "celsius": 21.5,\n  "recentSamples": [21.3, 21.4, 21.5]\n}',
   },
-  'system-start': {
+  BatteryTelemetry: {
     ...SAMPLE_MESSAGES[2],
-    messageType: 'Pulsar.SampleMessages.SystemStart',
-    templateJson: '{\n  "node": "alpha"\n}',
+    messageType: 'Battery Status',
+    templateJson: '{\n  "packId": "pack-a",\n  "percentage": 87.5,\n  "voltage": 28.4,\n  "charging": false\n}',
   },
-  overheat: {
+  OperatorAlert: {
     ...SAMPLE_MESSAGES[3],
-    messageType: 'Pulsar.SampleMessages.OverheatAlarm',
-    templateJson: '{\n  "celsius": 95\n}',
+    messageType: 'Operator Alert',
+    templateJson: '{\n  "code": "INFO-100",\n  "message": "Routine status update.",\n  "severity": "Info"\n}',
   },
-  reboot: {
+  ModeChangedEvent: {
     ...SAMPLE_MESSAGES[4],
-    messageType: 'Pulsar.SampleMessages.RebootCommand',
-    templateJson: '{\n  "delaySeconds": 5\n}',
+    messageType: 'Mode Changed',
+    templateJson: '{\n  "from": "Idle",\n  "to": "Active",\n  "reason": "Operator command"\n}',
+  },
+  SubsystemFault: {
+    ...SAMPLE_MESSAGES[5],
+    messageType: 'Subsystem Fault',
+    templateJson: '{\n  "subsystem": "power",\n  "faultCode": "F-205",\n  "description": "Voltage out of expected range.",\n  "severity": "Critical"\n}',
   },
 };
 
@@ -74,7 +80,7 @@ export function connected(endpoint: string): TransportStatus {
 export function makeJob(overrides: Partial<CyclicJob> = {}): CyclicJob {
   return {
     id: 'job-1',
-    messageKey: 'heartbeat',
+    messageKey: 'HeartbeatTelemetry',
     displayName: 'Heartbeat',
     channel: 'telemetry.heartbeat',
     intervalMs: 1000,
@@ -93,7 +99,7 @@ export function makeJob(overrides: Partial<CyclicJob> = {}): CyclicJob {
 export function makeActivity(overrides: Partial<PublishActivity> = {}): PublishActivity {
   return {
     source: 'manual',
-    messageKey: 'heartbeat',
+    messageKey: 'HeartbeatTelemetry',
     displayName: 'Heartbeat',
     channel: 'telemetry.heartbeat',
     byteCount: 42,

@@ -4,7 +4,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <PackageId>Pulsar.Contracts</PackageId>
-    <Description>The plugin SDK for Pulsar. Reference this from a message library to expose a message catalog and serializer to the Pulsar publishing tool.</Description>
+    <Description>The manifest adapter SDK for Pulsar. Reference this only from optional custom adapter assemblies.</Description>
   </PropertyGroup>
 
 </Project>

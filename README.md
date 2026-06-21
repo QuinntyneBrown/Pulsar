@@ -25,8 +25,8 @@ publishing, and a live activity feed.
 A message library supplies the **JSON Schema** for each message; Pulsar creates JSON
 from it, then a tiny **`JsonToRedisValue`** adapter converts that JSON into the Redis
 message. Built-in adapters (`json-passthrough`, `json-envelope`) cover the common
-cases with no code; the typed `IPulsarPlugin` model is still supported for binary
-wire formats (see [Writing your own message plugin](#writing-your-own-message-plugin)).
+cases with no code; custom adapters cover binary wire formats when a manifest needs
+to call your own conversion code.
 
 ---
 
@@ -76,8 +76,8 @@ Pick a message, edit the JSON payload, then **Send once** or **Start cyclic**.
 - **Settings** (gear) — change the Redis connection string or load a different plugin.
 
 Configure the Redis connection and the auto-loaded plugin in
-`backend/src/Pulsar.Api/appsettings.json`. `PluginPath` may point at a **manifest**
-(`*.json`, data-only) or a **plugin assembly** (`*.dll`, legacy):
+`backend/src/Pulsar.Api/appsettings.json`. `PluginPath` points at a
+`pulsar.plugin.json` manifest:
 
 ```json
 "Pulsar": {
@@ -90,14 +90,14 @@ Configure the Redis connection and the auto-loaded plugin in
 
 ## Writing your own message plugin
 
-There are two ways to write a plugin. Prefer the first.
+There are two ways to configure how a manifest publishes messages. Prefer the first.
 
 ### 1. Data-only manifest (recommended — no code)
 
 A plugin can be just data: a `pulsar.plugin.json` manifest, one JSON Schema per
 message, an example payload per message, and a named adapter. There is **no assembly
 to build or load**, which also sidesteps Windows Smart App Control blocking
-freshly-built unsigned plugin DLLs.
+freshly-built unsigned custom adapter DLLs.
 
 ```jsonc
 // pulsar.plugin.json — the catalog as data
@@ -176,17 +176,9 @@ Reference `Pulsar.Contracts` without shipping a duplicate:
 </ProjectReference>
 ```
 
-### 3. Legacy `IPulsarPlugin` (still supported)
-
-The original typed model — a class library implementing `IPulsarPlugin` with a
-`MessageDescriptor` catalog and an `IMessageSerializer` — still loads unchanged when
-`PluginPath` points at the DLL. Internally it is adapted to the same pipeline (the
-serializer becomes a `JsonToRedisValue`). The compiled reference plugin lives in
-[`backend/samples/Pulsar.SampleMessages`](backend/samples/Pulsar.SampleMessages).
-
-Load any of these via the **Settings** dialog (paste the path) or by setting
-`Pulsar:PluginPath`. Loading a new plugin stops any running cyclic jobs and swaps the
-catalog atomically.
+Load a manifest via the **Settings** dialog (paste the path) or by setting
+`Pulsar:PluginPath`. Loading a new manifest stops any running cyclic jobs and swaps
+the catalog atomically.
 
 ---
 
@@ -230,12 +222,12 @@ Radically simple, SOLID, and message-agnostic. The repo splits into a self-conta
 
 | Project | Responsibility |
 | --- | --- |
-| **backend/src/Pulsar.Contracts** | The plugin SDK: `JsonToRedisValue` + `MessageContext` (the adapter contract), plus the legacy `IPulsarPlugin`/`IMessageSerializer`/`MessageDescriptor`. The only thing a plugin references. |
-| **backend/src/Pulsar.Core** | Domain logic — manifest + legacy plugin loading (`CatalogLoader`), built-in adapters, advisory JSON-Schema validation, the editor template, one-shot publishing, the cyclic scheduler, and the transport/activity abstractions. No web, no Redis client. |
+| **backend/src/Pulsar.Contracts** | The adapter SDK: `JsonToRedisValue` + `MessageContext`. Reference it only from optional custom adapter assemblies. |
+| **backend/src/Pulsar.Core** | Domain logic — manifest loading (`CatalogLoader`), built-in adapters, advisory JSON-Schema validation, the editor template, one-shot publishing, the cyclic scheduler, and the transport/activity abstractions. No web, no Redis client. |
 | **backend/src/Pulsar.Redis** | The single place a Redis client appears: `IMessageTransport` over `StackExchange.Redis`. |
 | **backend/src/Pulsar.Api** | ASP.NET Core 8 host — minimal-API endpoints, the SSE activity stream, and SPA hosting. |
 | **backend/src/Pulsar.Cli** | The `pulsar` global tool (System.CommandLine, command-per-file): validate/list/gen-example/new/import/publish. Reuses `Pulsar.Core`; spec-parser deps stay here. |
-| **backend/samples/Pulsar.SampleMessages** | The reference plugin in both forms: a data-only `manifest/` (schemas + examples + `json-envelope`) and the legacy compiled `IPulsarPlugin`. |
+| **backend/samples/Pulsar.SampleMessages** | The reference manifest plugin: schemas + examples + the built-in `json-envelope` adapter. |
 | **frontend** | Angular 17.2.2 standalone app: a signal-based store, an SSE live feed, and a three-pane dashboard with advisory schema validation. |
 | **backend/tests/Pulsar.Tests** | xUnit unit + in-memory HTTP integration tests. |
 
@@ -244,12 +236,11 @@ Design choices worth knowing:
 - **The catalog is data, not code.** A manifest + JSON Schemas describe the messages;
   the editor is seeded from an example and the message is published by a named adapter.
   No assembly is loaded for the data-only path — which also avoids Smart App Control
-  blocking freshly-built plugin DLLs.
+  blocking freshly-built custom adapter DLLs.
 - **One seam, `JsonToRedisValue`.** The edited JSON goes straight to an adapter that
-  returns the bytes — a strict generalization of the old serializer (the legacy
-  `IMessageSerializer` is adapted to exactly this). Built-in adapters cover plain and
-  enveloped JSON; a custom static method covers binary formats. Only a custom code
-  adapter or a legacy DLL loads a collectible `AssemblyLoadContext`.
+  returns the bytes. Built-in adapters cover plain and enveloped JSON; a custom
+  static method covers binary formats. Only a custom code adapter loads a collectible
+  `AssemblyLoadContext`.
 - **Validation is advisory.** A JSON-Schema mismatch is surfaced in the UI but never
   blocks publishing — sending malformed payloads on purpose is part of the job.
 - **Dependency inversion** keeps `Pulsar.Core` free of both ASP.NET and Redis: it

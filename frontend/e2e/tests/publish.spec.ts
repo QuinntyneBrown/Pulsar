@@ -20,12 +20,12 @@ test.describe('Publish once', () => {
   });
 
   test('a server-side publish failure surfaces an error toast', async ({ mock, app }) => {
-    mock.failOn('POST publish', 400, { error: 'Serializer rejected payload.' });
+    mock.failOn('POST publish', 400, { error: 'Adapter rejected payload.' });
     await app.goto();
 
     await app.composer.send();
 
-    await app.expectErrorToast('Serializer rejected payload.');
+    await app.expectErrorToast('Adapter rejected payload.');
   });
 
   test('invalid JSON blocks the publish and shows an inline error (no request sent)', async ({ app }) => {

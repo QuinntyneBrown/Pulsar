@@ -5,8 +5,7 @@ public static class PluginPaths
 {
     /// <summary>
     /// If <paramref name="path"/> is a directory, resolves it to the
-    /// <c>pulsar.plugin.json</c> inside it; otherwise returns it unchanged (a manifest
-    /// file or a legacy <c>.dll</c>).
+    /// <c>pulsar.plugin.json</c> inside it; otherwise returns the manifest path unchanged.
     /// </summary>
     public static string Resolve(string path) =>
         !string.IsNullOrWhiteSpace(path) && Directory.Exists(path)

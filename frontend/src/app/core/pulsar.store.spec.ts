@@ -81,7 +81,7 @@ describe('PulsarStore', () => {
 
   describe('plugin & messages', () => {
     it('refreshPlugin loads messages when a plugin is present', () => {
-      api.getPlugin.mockReturnValue(of<PluginState>({ isLoaded: true, plugin: { name: 'P', sourcePath: 'p.dll', loadedAt: 't', messageCount: 1 } }));
+      api.getPlugin.mockReturnValue(of<PluginState>({ isLoaded: true, plugin: { name: 'P', sourcePath: 'pulsar.plugin.json', loadedAt: 't', messageCount: 1 } }));
       api.getMessages.mockReturnValue(of([msg('a', 'Event')]));
       api.getMessage.mockReturnValue(of({ ...msg('a', 'Event'), messageType: 'T', templateJson: '{}', hasSchema: false } as MessageDetail));
 
@@ -132,8 +132,8 @@ describe('PulsarStore', () => {
     });
 
     it('loadPlugin reports success and re-reads plugin state', () => {
-      api.loadPlugin.mockReturnValue(of({ name: 'Sample', sourcePath: 'x.dll', loadedAt: 't', messageCount: 3 }));
-      store.loadPlugin('x.dll');
+      api.loadPlugin.mockReturnValue(of({ name: 'Sample', sourcePath: 'plugins/x/pulsar.plugin.json', loadedAt: 't', messageCount: 3 }));
+      store.loadPlugin('plugins/x/pulsar.plugin.json');
       expect(store.toast()).toMatchObject({ kind: 'ok' });
       expect(api.getPlugin).toHaveBeenCalled();
     });

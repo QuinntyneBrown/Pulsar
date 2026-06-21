@@ -1,7 +1,7 @@
 {
-  // A data-only Pulsar plugin: no compiled assembly. The JSON Schemas describe each
+  // A data-only Pulsar plugin: no catalog assembly. The JSON Schemas describe each
   // message, the examples seed the editor, and the built-in "json-envelope" adapter
-  // wraps the payload exactly like the reference SampleJsonSerializer did.
+  // wraps the payload in standard Pulsar metadata.
   "name": "Sample Messages",
   "adapter": "json-envelope",
   "messages": [

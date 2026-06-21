@@ -23,7 +23,7 @@ public sealed class ValidateCommand : ICliCommand
 
     public Command Build()
     {
-        var pathArg = new Argument<string>("path", "A manifest (.json), a plugin folder, or a legacy plugin (.dll).");
+        var pathArg = new Argument<string>("path", "A manifest (.json) or plugin folder.");
         var strictOpt = new Option<bool>("--strict", "Treat example/schema mismatches as failures (exit 1).");
         var warnOnlyOpt = new Option<bool>("--warn-only", "Never fail on example/schema mismatches (exit 0).");
         var command = new Command("validate", "Validate a plugin and check each example against its schema.")

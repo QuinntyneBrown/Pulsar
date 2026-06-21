@@ -4,16 +4,16 @@ test.describe('Initial load', () => {
   test('renders the catalog grouped, auto-selects the first message, and seeds the composer', async ({ mock, app }) => {
     await app.goto();
 
-    // Catalog: all five messages, grouped in category order.
-    await expect(app.catalog.items).toHaveCount(5);
-    expect(await app.catalog.groupOrder()).toEqual(['Telemetry', 'Event', 'Fault', 'Command']);
+    // Catalog: all six messages, grouped in category order.
+    await expect(app.catalog.items).toHaveCount(6);
+    expect(await app.catalog.groupOrder()).toEqual(['Telemetry', 'Event', 'Fault']);
 
     // First message is auto-selected...
-    expect(await app.catalog.isActive('heartbeat')).toBe(true);
+    expect(await app.catalog.isActive('HeartbeatTelemetry')).toBe(true);
 
     // ...and the composer is seeded from its detail.
     await expect(app.composer.title).toHaveText('Heartbeat');
-    await expect(app.composer.messageType).toHaveText('Pulsar.SampleMessages.Heartbeat');
+    await expect(app.composer.messageType).toHaveText('Heartbeat');
     await expect(app.composer.channel).toHaveValue('telemetry.heartbeat');
     await expect(app.composer.payload).toHaveValue(/deviceId/);
     await expect(app.composer.category).toHaveText('Telemetry');
@@ -22,8 +22,8 @@ test.describe('Initial load', () => {
   test('header reflects the loaded plugin and offline Redis', async ({ app }) => {
     await app.goto();
 
-    await expect(app.header.pluginStatus).toContainText('Pulsar.SampleMessages');
-    await expect(app.header.pluginStatus).toContainText('5 msgs');
+    await expect(app.header.pluginStatus).toContainText('Sample Messages');
+    await expect(app.header.pluginStatus).toContainText('6 msgs');
     await expect(app.header.redisStatus).toContainText('Redis offline');
   });
 

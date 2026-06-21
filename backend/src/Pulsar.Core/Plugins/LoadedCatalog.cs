@@ -3,9 +3,8 @@ namespace Pulsar.Core.Plugins;
 /// <summary>
 /// The set of messages currently loaded into the running tool, plus whatever needs
 /// disposing when they are unloaded. A data-only manifest plugin has nothing to
-/// dispose (<see cref="_unloadHandle"/> is null); a plugin that supplied a compiled
-/// adapter — or a legacy <see cref="Pulsar.Contracts.IPulsarPlugin"/> DLL — disposes
-/// its isolated load context here.
+/// dispose (<see cref="_unloadHandle"/> is null); a manifest that supplied a compiled
+/// adapter disposes its isolated load context here.
 /// </summary>
 public sealed class LoadedCatalog : IDisposable
 {
@@ -28,7 +27,7 @@ public sealed class LoadedCatalog : IDisposable
     /// <summary>Display name of the plugin/catalog, shown in the UI.</summary>
     public string Name { get; }
 
-    /// <summary>The manifest or assembly the catalog was loaded from.</summary>
+    /// <summary>The manifest the catalog was loaded from.</summary>
     public string SourcePath { get; }
 
     /// <summary>When the catalog was loaded.</summary>

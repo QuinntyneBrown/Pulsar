@@ -4,7 +4,7 @@ namespace Pulsar.Core.Plugins;
 
 /// <summary>
 /// Coordinates loading a plugin with the rest of the system: any running cyclic
-/// jobs (which reference the outgoing plugin's serializer) are stopped first, so
+/// jobs (which reference the outgoing plugin's adapter) are stopped first, so
 /// a reload never leaves jobs ticking against an unloaded context.
 /// </summary>
 public sealed class PluginManagementService

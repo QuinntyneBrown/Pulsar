@@ -28,12 +28,11 @@
       <!-- Plugin -->
       <div class="section">
         <h3 class="section__title">Message plugin</h3>
-        <p class="faint">Path to a .NET assembly that exposes a message catalog and serializer
-          (implements <span class="mono">IPulsarPlugin</span>).</p>
+        <p class="faint">Path to a <span class="mono">pulsar.plugin.json</span> manifest that declares the message catalog.</p>
         <div class="row">
           <input class="input input--mono" data-testid="plugin-input" [value]="pluginPath()"
                  (input)="pluginPath.set($any($event.target).value)"
-                 placeholder="plugins/MyMessages.dll" />
+                 placeholder="plugins/manifest/pulsar.plugin.json" />
           <button class="btn btn--primary" data-testid="plugin-load" (click)="load()" [disabled]="!pluginPath().trim()">Load</button>
         </div>
         <div class="status" data-testid="plugin-settings-status">

@@ -1,19 +1,16 @@
 namespace Pulsar.Core.Plugins;
 
 /// <summary>
-/// The single entry point the host uses to load a catalog, regardless of form. It
-/// dispatches by extension: a <c>.json</c> path is a data-only manifest; anything
-/// else is treated as a legacy <see cref="Pulsar.Contracts.IPulsarPlugin"/> assembly.
+/// The single entry point the host uses to load a catalog from a data-only
+/// <c>pulsar.plugin.json</c> manifest.
 /// </summary>
 public sealed class CatalogLoader
 {
-    private readonly LegacyPluginLoader _legacy;
     private readonly ManifestPluginLoader _manifest;
     private readonly TimeProvider _clock;
 
-    public CatalogLoader(LegacyPluginLoader legacy, ManifestPluginLoader manifest, TimeProvider? clock = null)
+    public CatalogLoader(ManifestPluginLoader manifest, TimeProvider? clock = null)
     {
-        _legacy = legacy;
         _manifest = manifest;
         _clock = clock ?? TimeProvider.System;
     }
@@ -24,11 +21,9 @@ public sealed class CatalogLoader
             throw new PluginLoadException("A plugin path is required.");
 
         var loadedAt = _clock.GetUtcNow();
-        return IsManifest(path)
-            ? _manifest.Load(path, loadedAt)
-            : _legacy.Load(path, loadedAt);
-    }
+        if (!path.Trim().EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            throw new PluginLoadException("Pulsar only loads data-only manifest plugins. Provide a pulsar.plugin.json path.");
 
-    private static bool IsManifest(string path) =>
-        path.Trim().EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+        return _manifest.Load(path, loadedAt);
+    }
 }

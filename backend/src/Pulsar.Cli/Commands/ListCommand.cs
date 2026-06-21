@@ -17,7 +17,7 @@ public sealed class ListCommand : ICliCommand
 
     public Command Build()
     {
-        var pathArg = new Argument<string>("path", "A manifest (.json), a plugin folder, or a legacy plugin (.dll).");
+        var pathArg = new Argument<string>("path", "A manifest (.json) or plugin folder.");
         var command = new Command("list", "List the messages in a plugin catalog.") { pathArg };
 
         command.SetHandler((InvocationContext ctx) =>

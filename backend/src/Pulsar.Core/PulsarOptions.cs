@@ -5,7 +5,7 @@ public sealed class PulsarOptions
 {
     public const string SectionName = "Pulsar";
 
-    /// <summary>Optional path to a plugin assembly to auto-load on startup.</summary>
+    /// <summary>Optional path to a manifest to auto-load on startup.</summary>
     public string? PluginPath { get; set; }
 
     /// <summary>Redis connection string used to connect on startup.</summary>
